@@ -1,5 +1,6 @@
 package com.prazk.myshortlink.admin.common.convention.result;
 
+import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,8 +19,13 @@ public class Result<T> implements Serializable {
     private String code;
     private T data;
 
+    public Result(String msg, String code) {
+        this.msg = msg;
+        this.code = code;
+    }
+
     // is 开头的 public 方法自动执行，并将返回值序列化为 JSON 字段
     public boolean isSuccess() {
-        return "0".equals(code);
+        return BaseErrorCode.SUCCESS_CODE.code().equals(code);
     }
 }
