@@ -21,6 +21,7 @@ public class UserController {
     @GetMapping("/{username}")
     public Result<UserVO> getByUsername(@PathVariable String username) {
         UserVO userVO = userService.getByUsername(username);
+
         return Results.success(userVO);
     }
 }
