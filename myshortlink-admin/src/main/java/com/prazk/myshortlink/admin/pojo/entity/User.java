@@ -2,7 +2,7 @@ package com.prazk.myshortlink.admin.pojo.entity;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 public class User {
@@ -19,9 +19,9 @@ public class User {
     //账号注销时间戳
     private Long deletionTime;
     //创建时间
-    private Date createTime;
+    private LocalDateTime createTime;
     //修改时间
-    private Date updateTime;
+    private LocalDateTime updateTime;
     //删除标识 0：未删除 1：已删除
     private Integer delFlag;
 }
