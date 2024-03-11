@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
+import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
 import com.prazk.myshortlink.admin.pojo.entity.User;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
 import com.prazk.myshortlink.admin.service.UserService;
@@ -38,5 +39,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public Boolean judgeExistByUsername(String username) {
         return userRegisterCachePenetrationBloomFilter.contains(username);
+    }
+
+    @Override
+    public void register(UserRegisterDTO userRegisterDTO) {
+        // 检测用户名已存在
+        if (this.judgeExistByUsername(userRegisterDTO.getUsername())) {
+            throw new ClientException(BaseErrorCode.USER_NAME_EXIST_ERROR);
+        }
+        // 若不存在，则新增用户至数据库：使用了mybatis-plus的字段自动填充功能
+        User user = new User();
+        BeanUtils.copyProperties(userRegisterDTO, user);
+        baseMapper.insert(user);
+        // 添加用户名到布隆过滤器
+        userRegisterCachePenetrationBloomFilter.add(user.getUsername());
     }
 }

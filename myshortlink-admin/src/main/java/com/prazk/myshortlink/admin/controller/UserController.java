@@ -2,13 +2,11 @@ package com.prazk.myshortlink.admin.controller;
 
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.common.convention.result.Results;
+import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
 import com.prazk.myshortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/user")
@@ -32,5 +30,14 @@ public class UserController {
     @GetMapping("/has/{username}")
     public Result<Boolean> judgeExistByUsername(@PathVariable String username) {
         return Results.success(userService.judgeExistByUsername(username));
+    }
+
+    /**
+     * 用户注册接口
+     */
+    @PostMapping
+    public Result<Void> register(@RequestBody UserRegisterDTO userRegisterDTO) {
+        userService.register(userRegisterDTO);
+        return Results.success();
     }
 }

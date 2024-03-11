@@ -8,6 +8,10 @@ public class Results {
         return new Result<>(BaseErrorCode.SUCCESS_CODE.msg(), BaseErrorCode.SUCCESS_CODE.code(), t);
     }
 
+    public static <T> Result<T> success() {
+        return new Result<>(BaseErrorCode.SUCCESS_CODE.msg(), BaseErrorCode.SUCCESS_CODE.code(), null);
+    }
+
     /**
      * 顶级异常
      */
