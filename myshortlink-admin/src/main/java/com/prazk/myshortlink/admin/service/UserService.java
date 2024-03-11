@@ -7,4 +7,6 @@ import com.prazk.myshortlink.admin.pojo.vo.UserVO;
 public interface UserService extends IService<User> {
 
     UserVO getByUsername(String username);
+
+    Boolean judgeExistByUsername(String username);
 }

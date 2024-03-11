@@ -8,13 +8,18 @@ import com.prazk.myshortlink.admin.mapper.UserMapper;
 import com.prazk.myshortlink.admin.pojo.entity.User;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
 import com.prazk.myshortlink.admin.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBloomFilter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
 
     @Override
     public UserVO getByUsername(String username) {
@@ -28,5 +33,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         BeanUtils.copyProperties(user, userVO);
 
         return userVO;
+    }
+
+    @Override
+    public Boolean judgeExistByUsername(String username) {
+        return userRegisterCachePenetrationBloomFilter.contains(username);
     }
 }
