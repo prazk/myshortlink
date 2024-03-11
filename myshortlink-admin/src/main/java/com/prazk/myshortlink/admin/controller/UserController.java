@@ -26,6 +26,8 @@ public class UserController {
     }
     /**
      * 判断用户名是否存在接口
+     * 存在：返回true
+     * 不存在，返回false
      */
     @GetMapping("/has/{username}")
     public Result<Boolean> judgeExistByUsername(@PathVariable String username) {

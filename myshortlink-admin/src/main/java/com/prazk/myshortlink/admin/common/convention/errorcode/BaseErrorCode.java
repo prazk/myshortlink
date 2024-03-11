@@ -11,6 +11,7 @@ public enum BaseErrorCode implements IErrorCode {
 
     // ========== 二级宏观错误码 用户注册错误 ==========
     USER_REGISTER_ERROR("A000100", "用户注册错误"),
+    USER_SAVE_ERROR("A000101", "保存用户出错"),
     USER_NAME_VERIFY_ERROR("A000110", "用户名校验失败"),
     USER_NAME_EXIST_ERROR("A000111", "用户名已存在"),
     USER_NOT_EXIST_ERROR("A000112", "用户不存在"),

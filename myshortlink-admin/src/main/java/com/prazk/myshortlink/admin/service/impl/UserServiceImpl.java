@@ -2,6 +2,7 @@ package com.prazk.myshortlink.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
@@ -12,6 +13,8 @@ import com.prazk.myshortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
+    private final RedissonClient redissonClient;
 
     @Override
     public UserVO getByUsername(String username) {
@@ -44,14 +48,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public void register(UserRegisterDTO userRegisterDTO) {
         // 检测用户名已存在
-        if (this.judgeExistByUsername(userRegisterDTO.getUsername())) {
+        String username = userRegisterDTO.getUsername();
+        if (this.judgeExistByUsername(username)) {
             throw new ClientException(BaseErrorCode.USER_NAME_EXIST_ERROR);
         }
+
         // 若不存在，则新增用户至数据库：使用了mybatis-plus的字段自动填充功能
-        User user = new User();
-        BeanUtils.copyProperties(userRegisterDTO, user);
-        baseMapper.insert(user);
-        // 添加用户名到布隆过滤器
-        userRegisterCachePenetrationBloomFilter.add(user.getUsername());
+        // 首先尝试获取锁
+        RLock lock = redissonClient.getLock(RedisCacheConstant.LOCK_USER_REGISTER_PREFIX + username);
+        boolean isSuccess = lock.tryLock();
+
+        // 获取失败，返回用户已存在
+        if (!isSuccess) {
+            throw new ClientException(BaseErrorCode.USER_NAME_EXIST_ERROR);
+        }
+        // 获取锁成功，进行注册
+        try {
+            User user = new User();
+            BeanUtils.copyProperties(userRegisterDTO, user);
+            int insert = baseMapper.insert(user);
+            if (insert < 1) {
+                // 保存失败
+                throw new ClientException(BaseErrorCode.USER_SAVE_ERROR);
+            }
+            // 添加用户名到布隆过滤器
+            userRegisterCachePenetrationBloomFilter.add(user.getUsername());
+        } finally { // 锁一定要释放
+            lock.unlock();
+        }
     }
 }
