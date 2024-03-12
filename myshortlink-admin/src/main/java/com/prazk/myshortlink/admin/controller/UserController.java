@@ -9,11 +9,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/admin/user")
+@RequestMapping("/api/short-link/admin/v1/user")
 @RequiredArgsConstructor // 生成一个包含final和标识了@NotNull的变量的构造方法
 public class UserController {
 
     private final UserService userService;
+
+
+    /**
+     * 判断用户名是否存在接口
+     * 存在：返回true
+     * 不存在，返回false
+     */
+    @GetMapping("/has-username")
+    public Result<Boolean> judgeExistByUsername(@RequestParam String username) {
+        return Results.success(userService.judgeExistByUsername(username));
+    }
 
     /**
      * 根据用户名查询信息
@@ -23,15 +34,6 @@ public class UserController {
         UserVO userVO = userService.getByUsername(username);
 
         return Results.success(userVO);
-    }
-    /**
-     * 判断用户名是否存在接口
-     * 存在：返回true
-     * 不存在，返回false
-     */
-    @GetMapping("/has/{username}")
-    public Result<Boolean> judgeExistByUsername(@PathVariable String username) {
-        return Results.success(userService.judgeExistByUsername(username));
     }
 
     /**
