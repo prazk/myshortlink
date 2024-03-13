@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
+/**
+ * Mybatis-plus 数据脱敏
+ */
 @Component
 public class UserMetaObjectHandler implements MetaObjectHandler {
     @Override
