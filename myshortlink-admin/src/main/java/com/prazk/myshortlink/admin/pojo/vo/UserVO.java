@@ -20,5 +20,5 @@ public class UserVO {
     @JsonSerialize(using = PhoneDesensitizationSerializer.class)
     private String phone;
     //邮箱
-    private String email;
+    private String mail;
 }

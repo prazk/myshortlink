@@ -2,6 +2,7 @@ package com.prazk.myshortlink.admin.controller;
 
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.common.convention.result.Results;
+import com.prazk.myshortlink.admin.pojo.dto.UserModifyDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
 import com.prazk.myshortlink.admin.service.UserService;
@@ -42,6 +43,15 @@ public class UserController {
     @PostMapping
     public Result<Void> register(@RequestBody UserRegisterDTO userRegisterDTO) {
         userService.register(userRegisterDTO);
+        return Results.success();
+    }
+
+    /**
+     * 修改用户
+     */
+    @PutMapping
+    public Result<Void> modify(@RequestBody UserModifyDTO userModifyDTO) {
+        userService.modify(userModifyDTO);
         return Results.success();
     }
 }

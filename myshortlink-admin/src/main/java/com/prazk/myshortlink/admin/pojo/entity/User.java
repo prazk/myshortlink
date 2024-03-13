@@ -26,7 +26,8 @@ public class User {
     //手机号
     private String phone;
     //邮箱
-    private String email;
+    @TableField("email")
+    private String mail;
     //账号注销时间戳
     private Long deletionTime;
     //创建时间

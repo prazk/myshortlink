@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRegisterDTO {
+public class UserModifyDTO {
     //用户名
     private String username;
     //密码

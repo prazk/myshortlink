@@ -1,11 +1,14 @@
 package com.prazk.myshortlink.admin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
+import com.prazk.myshortlink.admin.pojo.dto.UserModifyDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
 import com.prazk.myshortlink.admin.pojo.entity.User;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
@@ -76,5 +79,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } finally { // 锁一定要释放
             lock.unlock();
         }
+    }
+
+    @Override
+    public void modify(UserModifyDTO userModifyDTO) {
+        // TODO 判断用户名是否一致
+        LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(User::getUsername, userModifyDTO.getUsername()); // where username = #{dto.getUsername()}
+        baseMapper.update(BeanUtil.toBean(userModifyDTO, User.class), wrapper);
     }
 }
