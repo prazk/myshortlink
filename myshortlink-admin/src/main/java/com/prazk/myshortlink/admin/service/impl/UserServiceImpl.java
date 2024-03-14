@@ -103,6 +103,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public UserLoginVO login(UserLoginDTO userLoginDTO) {
         String username = userLoginDTO.getUsername();
+        String key = RedisCacheConstant.TOKEN_USER_LOGIN_PREFIX + username;
+        // 用户已登录
+        if (stringRedisTemplate.opsForHash().get(key, "token") != null) {
+            throw new ClientException(BaseErrorCode.USER_HAS_LOGIN);
+        }
         // 查询数据库并校验
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username)
@@ -119,7 +124,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // 保存到 Redis
         // 使用 Redis Hash 结构，key 设计为每个用户唯一，value 中保存 token 和用户信息
-        String key = RedisCacheConstant.TOKEN_USER_LOGIN_PREFIX + username;
         Map<String, String> claims = new HashMap<>();
         claims.put("username", username);
         claims.put("token", token);
