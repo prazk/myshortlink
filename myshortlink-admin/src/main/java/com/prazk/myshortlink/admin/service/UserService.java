@@ -2,6 +2,7 @@ package com.prazk.myshortlink.admin.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.prazk.myshortlink.admin.pojo.dto.UserLoginDTO;
+import com.prazk.myshortlink.admin.pojo.dto.UserLogoutDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserModifyDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
 import com.prazk.myshortlink.admin.pojo.entity.User;
@@ -20,4 +21,5 @@ public interface UserService extends IService<User> {
 
     UserLoginVO login(UserLoginDTO userLoginDTO);
 
+    void logout(UserLogoutDTO userLogoutDTO);
 }

@@ -3,6 +3,7 @@ package com.prazk.myshortlink.admin.controller;
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.common.convention.result.Results;
 import com.prazk.myshortlink.admin.pojo.dto.UserLoginDTO;
+import com.prazk.myshortlink.admin.pojo.dto.UserLogoutDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserModifyDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
 import com.prazk.myshortlink.admin.pojo.vo.UserLoginVO;
@@ -64,5 +65,14 @@ public class UserController {
     public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         UserLoginVO loginVO = userService.login(userLoginDTO);
         return Results.success(loginVO);
+    }
+
+    /**
+     * 退出登录
+     */
+    @DeleteMapping("/logout")
+    public Result<Void> logout(@RequestBody UserLogoutDTO userLogoutDTO) {
+        userService.logout(userLogoutDTO);
+        return Results.success();
     }
 }

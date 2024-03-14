@@ -12,6 +12,7 @@ import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
 import com.prazk.myshortlink.admin.pojo.dto.UserLoginDTO;
+import com.prazk.myshortlink.admin.pojo.dto.UserLogoutDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserModifyDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
 import com.prazk.myshortlink.admin.pojo.entity.User;
@@ -133,5 +134,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return UserLoginVO.builder()
                 .token(token)
                 .build();
+    }
+
+    @Override
+    public void logout(UserLogoutDTO userLogoutDTO) {
+        String key = RedisCacheConstant.TOKEN_USER_LOGIN_PREFIX + userLogoutDTO.getUsername();
+        String token = (String) stringRedisTemplate.opsForHash().get(key, "token");
+        if (token != null && token.equals(userLogoutDTO.getToken())) {
+            stringRedisTemplate.delete(key);
+            return;
+        }
+        throw new ClientException("用户名或token错误");
     }
 }
