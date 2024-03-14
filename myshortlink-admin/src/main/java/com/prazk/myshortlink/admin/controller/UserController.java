@@ -2,8 +2,10 @@ package com.prazk.myshortlink.admin.controller;
 
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.common.convention.result.Results;
+import com.prazk.myshortlink.admin.pojo.dto.UserLoginDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserModifyDTO;
 import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
+import com.prazk.myshortlink.admin.pojo.vo.UserLoginVO;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
 import com.prazk.myshortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -53,5 +55,14 @@ public class UserController {
     public Result<Void> modify(@RequestBody UserModifyDTO userModifyDTO) {
         userService.modify(userModifyDTO);
         return Results.success();
+    }
+
+    /**
+     * 用户登录
+     */
+    @PostMapping("/login")
+    public Result<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
+        UserLoginVO loginVO = userService.login(userLoginDTO);
+        return Results.success(loginVO);
     }
 }
