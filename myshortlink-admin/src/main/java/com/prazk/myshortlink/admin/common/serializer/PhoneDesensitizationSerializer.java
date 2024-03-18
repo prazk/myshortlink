@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 
 import java.io.IOException;
 
+/**
+ * 自定义序列化器，实现数据脱敏
+ */
 public class PhoneDesensitizationSerializer extends JsonSerializer<String> {
 
     @Override
