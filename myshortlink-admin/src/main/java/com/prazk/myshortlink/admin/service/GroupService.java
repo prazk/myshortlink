@@ -16,4 +16,6 @@ public interface GroupService extends IService<Group> {
     List<GroupVO> getGroups();
 
     void updateGroup(GroupUpdateDTO groupUpdateDTO);
+
+    void deleteGroup(String gid);
 }

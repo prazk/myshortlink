@@ -45,4 +45,14 @@ public class GroupController {
         return Results.success();
     }
 
+    /**
+     * 删除短链接分组：根据用户名和分组id删除
+     * 逻辑删除，设置 delFlag为 true
+     */
+    @DeleteMapping
+    public Result<Void> deleteGroup(@RequestParam String gid) {
+        groupService.deleteGroup(gid);
+        return Results.success();
+    }
+
 }

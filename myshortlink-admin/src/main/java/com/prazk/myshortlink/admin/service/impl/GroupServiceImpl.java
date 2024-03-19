@@ -77,4 +77,17 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
                 .build();
         baseMapper.update(group, wrapper);
     }
+
+    @Override
+    public void deleteGroup(String gid) {
+        // 根据用户名和分组ID，删除分组名
+        LambdaUpdateWrapper<Group> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Group::getUsername, UserContext.getUser().getUsername())
+                .eq(Group::getGid, gid);
+
+        Group group = Group.builder()
+                .delFlag(CommonConstant.HAS_BEEN_DELETED)
+                .build();
+        baseMapper.update(group, wrapper);
+    }
 }
