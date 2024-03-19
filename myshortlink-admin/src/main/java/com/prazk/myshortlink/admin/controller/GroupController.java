@@ -3,6 +3,7 @@ package com.prazk.myshortlink.admin.controller;
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.common.convention.result.Results;
 import com.prazk.myshortlink.admin.pojo.dto.GroupCreateDTO;
+import com.prazk.myshortlink.admin.pojo.dto.GroupSortDTO;
 import com.prazk.myshortlink.admin.pojo.dto.GroupUpdateDTO;
 import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
 import com.prazk.myshortlink.admin.service.GroupService;
@@ -55,4 +56,12 @@ public class GroupController {
         return Results.success();
     }
 
+    /**
+     * 分组排序
+     */
+    @PutMapping("/sort")
+    public Result<Void> sortGroup(@RequestBody List<GroupSortDTO> list) {
+        groupService.sortGroup(list);
+        return Results.success();
+    }
 }

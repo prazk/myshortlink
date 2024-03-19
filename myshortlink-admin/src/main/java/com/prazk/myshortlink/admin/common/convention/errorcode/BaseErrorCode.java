@@ -29,6 +29,7 @@ public enum BaseErrorCode implements IErrorCode {
 
     // ========== 二级宏观错误码 分组错误码 ==========
     GROUP_REACH_LIMIT_ERROR("A000300", "分组达到上限"),
+    GROUP_NOT_FOUND_ERROR("A000301", "分组不存在"),
 
     // ========== 一级宏观错误码 系统执行出错 ==========
     SERVICE_ERROR("B000001", "系统执行出错"),
