@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.constant.CommonConstant;
+import com.prazk.myshortlink.admin.common.context.UserContext;
 import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
@@ -95,7 +96,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public void modify(UserModifyDTO userModifyDTO) {
-        // TODO 判断用户名是否一致
+        String username = UserContext.getUser().getUsername();
+        if (!username.equals(userModifyDTO.getUsername()))
+            throw new ClientException(BaseErrorCode.USER_NAME_VERIFY_ERROR);
+
         LambdaUpdateWrapper<User> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(User::getUsername, userModifyDTO.getUsername()); // where username = #{dto.getUsername()}
         baseMapper.update(BeanUtil.toBean(userModifyDTO, User.class), wrapper);

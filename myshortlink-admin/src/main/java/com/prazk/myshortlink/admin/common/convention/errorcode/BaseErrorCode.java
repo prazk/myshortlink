@@ -27,6 +27,9 @@ public enum BaseErrorCode implements IErrorCode {
     IDEMPOTENT_TOKEN_NULL_ERROR("A000200", "幂等Token为空"),
     IDEMPOTENT_TOKEN_DELETE_ERROR("A000201", "幂等Token已被使用或失效"),
 
+    // ========== 二级宏观错误码 分组错误码 ==========
+    GROUP_REACH_LIMIT_ERROR("A000300", "分组达到上限"),
+
     // ========== 一级宏观错误码 系统执行出错 ==========
     SERVICE_ERROR("B000001", "系统执行出错"),
     // ========== 二级宏观错误码 系统执行超时 ==========

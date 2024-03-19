@@ -9,4 +9,8 @@ public class GroupConstant {
      * sortOrder排序最大值 999
      */
     public static final Integer SORT_ORDER_MAX_VALUE = 999;
+    /**
+     * 最大分组数量
+     */
+    public static final Integer GROUP_LIMIT = 10;
 }
