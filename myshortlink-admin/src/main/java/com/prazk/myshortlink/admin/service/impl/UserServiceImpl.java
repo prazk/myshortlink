@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
-import com.prazk.myshortlink.admin.common.constant.UserConstant;
+import com.prazk.myshortlink.admin.common.constant.CommonConstant;
 import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
@@ -113,7 +113,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username)
                 .eq(User::getPassword, userLoginDTO.getPassword())
-                .eq(User::getDelFlag, UserConstant.ACCOUNT_NOT_DELETED);
+                .eq(User::getDelFlag, CommonConstant.NOT_DELETED);
         Long cnt = baseMapper.selectCount(wrapper);
 
         // TODO 分开校验用户名和密码

@@ -25,6 +25,9 @@ public class Group {
     private String name;
     //创建人用户名
     private String username;
+    // 自定义排序
+    @TableField(fill = FieldFill.INSERT)
+    private Integer sortOrder;
     //创建时间
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;

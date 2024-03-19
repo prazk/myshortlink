@@ -1,11 +1,14 @@
 package com.prazk.myshortlink.admin.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.prazk.myshortlink.admin.common.constant.CommonConstant;
 import com.prazk.myshortlink.admin.common.constant.GroupConstant;
 import com.prazk.myshortlink.admin.mapper.GroupMapper;
 import com.prazk.myshortlink.admin.pojo.dto.GroupCreateDTO;
 import com.prazk.myshortlink.admin.pojo.entity.Group;
+import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
 import com.prazk.myshortlink.admin.service.GroupService;
 import com.prazk.myshortlink.admin.util.GidGenerator;
 import org.springframework.stereotype.Service;
@@ -41,5 +44,18 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
                 .build();
 
         baseMapper.insert(group);
+    }
+
+    @Override
+    public List<GroupVO> getGroups() {
+        // TODO 获取用户名
+        String username = "zjx";
+
+        LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Group::getUsername, username)
+                .eq(Group::getDelFlag, CommonConstant.NOT_DELETED);
+        List<Group> groups = baseMapper.selectList(wrapper);
+
+        return BeanUtil.copyToList(groups, GroupVO.class);
     }
 }
