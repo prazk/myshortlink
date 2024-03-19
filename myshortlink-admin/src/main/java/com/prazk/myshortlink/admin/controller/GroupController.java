@@ -3,6 +3,7 @@ package com.prazk.myshortlink.admin.controller;
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.common.convention.result.Results;
 import com.prazk.myshortlink.admin.pojo.dto.GroupCreateDTO;
+import com.prazk.myshortlink.admin.pojo.dto.GroupUpdateDTO;
 import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
 import com.prazk.myshortlink.admin.service.GroupService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,15 @@ public class GroupController {
     public Result<List<GroupVO>> getGroups() {
         List<GroupVO> list = groupService.getGroups();
         return Results.success(list);
+    }
+
+    /**
+     * 短链接分组修改
+     */
+    @PutMapping
+    public Result<Void> updateGroup(@RequestBody GroupUpdateDTO groupUpdateDTO) {
+        groupService.updateGroup(groupUpdateDTO);
+        return Results.success();
     }
 
 }

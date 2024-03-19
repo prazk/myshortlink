@@ -15,7 +15,7 @@ import static com.prazk.myshortlink.admin.common.constant.GroupConstant.SORT_ORD
 public class MetaDataHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
-        this.strictUpdateFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
+        this.strictInsertFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
         this.strictInsertFill(metaObject, "createTime", LocalDateTime::now, LocalDateTime.class);
         this.strictInsertFill(metaObject, "delFlag", () -> 0, Integer.class);
         // 分组排序

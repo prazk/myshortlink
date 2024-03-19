@@ -2,6 +2,7 @@ package com.prazk.myshortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.admin.common.constant.CommonConstant;
 import com.prazk.myshortlink.admin.common.constant.GroupConstant;
@@ -10,6 +11,7 @@ import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.GroupMapper;
 import com.prazk.myshortlink.admin.pojo.dto.GroupCreateDTO;
+import com.prazk.myshortlink.admin.pojo.dto.GroupUpdateDTO;
 import com.prazk.myshortlink.admin.pojo.entity.Group;
 import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
 import com.prazk.myshortlink.admin.service.GroupService;
@@ -61,5 +63,18 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         List<Group> groups = baseMapper.selectList(wrapper);
 
         return BeanUtil.copyToList(groups, GroupVO.class);
+    }
+
+    @Override
+    public void updateGroup(GroupUpdateDTO groupUpdateDTO) {
+        // 根据用户名和分组ID，修改分组名
+        LambdaUpdateWrapper<Group> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Group::getUsername, UserContext.getUser().getUsername())
+                .eq(Group::getGid, groupUpdateDTO.getGid());
+
+        Group group = Group.builder()
+                .name(groupUpdateDTO.getName())
+                .build();
+        baseMapper.update(group, wrapper);
     }
 }
