@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-import static com.prazk.myshortlink.admin.common.constant.GroupConstant.SORT_ORDER_MAX_LENGTH;
+import static com.prazk.myshortlink.admin.common.constant.GroupConstant.SORT_ORDER_MAX_VALUE;
 
 /**
  * Mybatis-plus 自动填充
@@ -19,7 +19,7 @@ public class MetaDataHandler implements MetaObjectHandler {
         this.strictInsertFill(metaObject, "createTime", LocalDateTime::now, LocalDateTime.class);
         this.strictInsertFill(metaObject, "delFlag", () -> 0, Integer.class);
         // 分组排序
-        this.strictInsertFill(metaObject, "sortOrder", () -> SORT_ORDER_MAX_LENGTH, Integer.class);
+        this.strictInsertFill(metaObject, "sortOrder", () -> SORT_ORDER_MAX_VALUE, Integer.class);
     }
 
     @Override

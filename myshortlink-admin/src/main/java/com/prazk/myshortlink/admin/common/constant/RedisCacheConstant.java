@@ -15,5 +15,5 @@ public class RedisCacheConstant {
    /**
     * 用户登录状态持续时间：单位 分钟
     */
-   public static final int DURATION_USER_LOGIN = 5;
+   public static final int DURATION_USER_LOGIN = 365 * 24 * 60;
 }

@@ -126,13 +126,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 保存到 Redis
         // 使用 Redis Hash 结构，key 设计为每个用户唯一，value 中保存 token 和用户信息
         Map<String, String> claims = new HashMap<>();
-        claims.put("username", username);
         claims.put("token", token);
         stringRedisTemplate.opsForHash().putAll(key, claims);
         stringRedisTemplate.expire(key, RedisCacheConstant.DURATION_USER_LOGIN, TimeUnit.MINUTES);
 
         return UserLoginVO.builder()
                 .token(token)
+                .username(username)
                 .build();
     }
 

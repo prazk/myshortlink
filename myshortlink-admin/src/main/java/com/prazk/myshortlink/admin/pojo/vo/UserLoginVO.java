@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class UserLoginVO {
     private String token;
+    private String username;
 }

@@ -6,7 +6,7 @@ public class GroupConstant {
      */
     public static final Integer GID_LENGTH = 6;
     /**
-     * sortOrder排序最大长度 999
+     * sortOrder排序最大值 999
      */
-    public static final Integer SORT_ORDER_MAX_LENGTH = 999;
+    public static final Integer SORT_ORDER_MAX_VALUE = 999;
 }
