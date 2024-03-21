@@ -7,7 +7,7 @@ public class GidGenerator {
 
     public static String generateUniqueID(Set<String> existingIds, int length) {
         SecureRandom random = new SecureRandom();
-        StringBuffer sb = new StringBuffer(length);
+        StringBuilder sb = new StringBuilder(length);
         boolean unique = false;
 
         while (!unique) {

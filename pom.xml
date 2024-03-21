@@ -11,7 +11,7 @@
 
     <modules>
         <module>myshortlink-admin</module>
-        <module>project</module>
+        <module>myshortlink-project</module>
         <module>gateway</module>
     </modules>
 
@@ -30,7 +30,7 @@
         <dozer-core.version>7.0.0</dozer-core.version>
         <hutool-all.version>5.8.25</hutool-all.version>
         <redisson.version>3.21.3</redisson.version>
-        <guava.version>30.0-jre</guava.version>
+        <guava.version>33.1.0-jre</guava.version>
         <jsoup.version>1.15.3</jsoup.version>
         <easyexcel.version>3.1.3</easyexcel.version>
         <spotless-maven-plugin.version>2.22.1</spotless-maven-plugin.version>
