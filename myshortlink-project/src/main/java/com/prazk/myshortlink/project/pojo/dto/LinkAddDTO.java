@@ -19,5 +19,5 @@ public class LinkAddDTO {
     //有效期
     private LocalDateTime validDate;
     //描述
-    private String describe;
+    private String description;
 }
