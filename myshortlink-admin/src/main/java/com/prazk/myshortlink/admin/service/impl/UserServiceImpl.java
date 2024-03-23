@@ -68,6 +68,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (this.judgeExistByUsername(username)) {
             throw new ClientException(BaseErrorCode.USER_NAME_EXIST_ERROR);
         }
+        // TODO 表单校验
 
         // 若不存在，则新增用户至数据库：使用了mybatis-plus的字段自动填充功能
         // 首先尝试获取锁

@@ -26,6 +26,11 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // 直接放行【用户注册接口】
+        if (request.getRequestURI().equals("/api/short-link/admin/v1/user") && request.getMethod().equals("POST")) {
+            return true;
+        }
+
         String token = request.getHeader("token");
         String username = request.getHeader("username");
 
