@@ -57,5 +57,6 @@
             <groupId>org.apache.shardingsphere</groupId>
             <artifactId>shardingsphere-jdbc-core</artifactId>
         </dependency>
+
     </dependencies>
 </project>

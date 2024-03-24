@@ -37,6 +37,7 @@
         <spring-boot-starter-test>3.2.3</spring-boot-starter-test>
         <mysql-connector-j>8.2.0</mysql-connector-j>
         <spring-boot-starter-web>3.2.1</spring-boot-starter-web>
+        <pagehelper.version>5.2.0</pagehelper.version>
     </properties>
 
     <dependencies>
