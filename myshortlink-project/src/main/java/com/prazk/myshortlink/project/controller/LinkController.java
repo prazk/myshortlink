@@ -19,7 +19,7 @@ public class LinkController {
     private final LinkService linkService;
 
     /**
-     * 创建单短链接
+     * 创建短链接
      */
     @PostMapping
     public Result<LinkAddVO> addLink(@RequestBody LinkAddDTO linkAddDTO) {
