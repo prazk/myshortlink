@@ -2,6 +2,7 @@ package com.prazk.myshortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -12,15 +13,20 @@ import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.mapper.LinkMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
 import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 import com.prazk.myshortlink.project.service.LinkService;
 import com.prazk.myshortlink.project.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -70,5 +76,20 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         // 获取查询结果
         IPage<LinkPageVO> result = page.convert(each -> BeanUtil.toBean(each, LinkPageVO.class));
         return result;
+    }
+
+    @Override
+    public List<LinkCountVO> listLinkCount(LinkCountDTO linkCountDTO) {
+        List<String> gids = linkCountDTO.getGid();
+        // select gid, count(*) from t_link_0 where gid in ('PD6dtO') and del_flag = 0 and enable_status = 1 group by gid;
+        QueryWrapper<Link> wrapper = new QueryWrapper<>();
+        wrapper.select("gid, count(*) as count")
+                .lambda()
+                .eq(Link::getDelFlag, CommonConstant.NOT_DELETED)
+                .eq(Link::getEnableStatus, CommonConstant.HAS_ENABLED)
+                .in(Link::getGid, gids)
+                .groupBy(Link::getGid);
+        List<Map<String, Object>> maps = baseMapper.selectMaps(wrapper);
+        return BeanUtil.copyToList(maps, LinkCountVO.class);
     }
 }
