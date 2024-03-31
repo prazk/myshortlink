@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.project.common.config.DomainProperties;
@@ -11,9 +12,11 @@ import com.prazk.myshortlink.project.common.constant.CommonConstant;
 import com.prazk.myshortlink.project.common.constant.LinkConstant;
 import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
+import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
 import com.prazk.myshortlink.project.mapper.LinkMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
 import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
@@ -24,6 +27,7 @@ import com.prazk.myshortlink.project.util.HashUtil;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -91,5 +95,44 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
                 .groupBy(Link::getGid);
         List<Map<String, Object>> maps = baseMapper.selectMaps(wrapper);
         return BeanUtil.copyToList(maps, LinkCountVO.class);
+    }
+
+    @Override
+    @Transactional
+    public void updateLink(LinkUpdateDTO linkUpdateDTO) {
+        // 查询相应短链接
+        LambdaQueryWrapper<Link> wrapper = Wrappers.lambdaQuery(Link.class)
+                .eq(Link::getGid, linkUpdateDTO.getGid())
+                .eq(Link::getShortUri, linkUpdateDTO.getShortUri())
+                .eq(Link::getDelFlag, CommonConstant.NOT_DELETED)
+                .eq(Link::getEnableStatus, CommonConstant.HAS_ENABLED);
+        Link link = baseMapper.selectOne(wrapper);
+        if (link == null) {
+            throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
+        }
+
+        // 封装修改数据
+        link.setGid(linkUpdateDTO.getNewGid());
+        link.setDescription(linkUpdateDTO.getDescription());
+        link.setValidDateType(linkUpdateDTO.getValidDateType());
+        // 让自动填充生效
+        link.setUpdateTime(null);
+        // 如果传入参数的ValidDateType是自定义有效期，则允许修改有效期
+        if (linkUpdateDTO.getValidDateType().equals(ValidDateTypeEnum.CUSTOMIZED.getType())) {
+            if (linkUpdateDTO.getValidDate() == null) {
+                throw new ClientException(BaseErrorCode.LINK_VALID_DATE_ERROR);
+            }
+            link.setValidDate(linkUpdateDTO.getValidDate());
+        } else {
+            link.setValidDate(null);
+        }
+
+        if (!linkUpdateDTO.getNewGid().equals(linkUpdateDTO.getGid())) {
+            // 如果修改了所属分组，则需要先删除该短连接，因为分片键是 gid
+            baseMapper.delete(wrapper);
+            baseMapper.insert(link);
+        } else {
+            baseMapper.update(link, wrapper);
+        }
     }
 }
