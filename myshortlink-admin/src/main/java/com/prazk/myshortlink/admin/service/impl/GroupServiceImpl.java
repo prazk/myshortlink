@@ -39,7 +39,11 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     @Override
     public void saveGroup(GroupCreateDTO groupCreateDTO) {
         String username = UserContext.getUser().getUsername();
+        saveGroup(username, groupCreateDTO);
+    }
 
+    @Override
+    public void saveGroup(String username, GroupCreateDTO groupCreateDTO) {
         // 先查询数据库中当前用户的所有gid
         LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Group::getUsername, username);

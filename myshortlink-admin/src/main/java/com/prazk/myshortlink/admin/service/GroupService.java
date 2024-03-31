@@ -13,6 +13,7 @@ import java.util.List;
 public interface GroupService extends IService<Group> {
 
     void saveGroup(GroupCreateDTO groupCreateDTO);
+    void saveGroup(String username, GroupCreateDTO groupCreateDTO);
 
     List<GroupVO> getGroups();
 

@@ -12,13 +12,11 @@ import com.prazk.myshortlink.admin.common.context.UserContext;
 import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
-import com.prazk.myshortlink.admin.pojo.dto.UserLoginDTO;
-import com.prazk.myshortlink.admin.pojo.dto.UserLogoutDTO;
-import com.prazk.myshortlink.admin.pojo.dto.UserModifyDTO;
-import com.prazk.myshortlink.admin.pojo.dto.UserRegisterDTO;
+import com.prazk.myshortlink.admin.pojo.dto.*;
 import com.prazk.myshortlink.admin.pojo.entity.User;
 import com.prazk.myshortlink.admin.pojo.vo.UserLoginVO;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
+import com.prazk.myshortlink.admin.service.GroupService;
 import com.prazk.myshortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +26,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +40,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
+    private final GroupService groupService;
 
     @Override
     public UserVO getByUsername(String username) {
@@ -62,6 +62,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional
     public void register(UserRegisterDTO userRegisterDTO) {
         // 检测用户名已存在
         String username = userRegisterDTO.getUsername();
@@ -90,6 +91,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             // 添加用户名到布隆过滤器
             userRegisterCachePenetrationBloomFilter.add(user.getUsername());
+            // 注册用户时，自动创建一个默认分组
+            groupService.saveGroup(username, new GroupCreateDTO("我的分组"));
         } finally { // 锁一定要释放
             lock.unlock();
         }
