@@ -15,8 +15,12 @@ import com.prazk.myshortlink.admin.pojo.dto.GroupSortDTO;
 import com.prazk.myshortlink.admin.pojo.dto.GroupUpdateDTO;
 import com.prazk.myshortlink.admin.pojo.entity.Group;
 import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
+import com.prazk.myshortlink.admin.remote.pojo.dto.LinkCountDTO;
+import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
+import com.prazk.myshortlink.admin.remote.service.ShortLinkRemoteService;
 import com.prazk.myshortlink.admin.service.GroupService;
 import com.prazk.myshortlink.admin.util.GidGenerator;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +31,10 @@ import java.util.stream.Collectors;
 import static com.prazk.myshortlink.admin.common.constant.GroupConstant.GROUP_LIMIT;
 
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements GroupService {
+
+    private final ShortLinkRemoteService shortLinkRemoteService;
 
     @Override
     public void saveGroup(GroupCreateDTO groupCreateDTO) {
@@ -59,13 +66,30 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     public List<GroupVO> getGroups() {
         String username = UserContext.getUser().getUsername();
 
+        // 查询用户名对应的分组信息
         LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Group::getUsername, username)
                 .eq(Group::getDelFlag, CommonConstant.NOT_DELETED);
-
         List<Group> groups = baseMapper.selectList(wrapper);
 
-        return BeanUtil.copyToList(groups, GroupVO.class);
+        // 查询每个分组下的分组数量
+        List<String> gids = groups.stream().map(Group::getGid).toList();
+
+        // 调用中台查询用户的所有分组的短链接数量接口
+        List<LinkCountVO> list = shortLinkRemoteService
+                .listLinkCount(new LinkCountDTO(gids)).getData().stream().toList();
+
+        List<GroupVO> result = BeanUtil.copyToList(groups, GroupVO.class);
+        result.forEach(groupVO -> {
+            String gid = groupVO.getGid();
+            list.forEach(linkCountVO -> {
+                if (linkCountVO.getGid().equals(gid)) {
+                    groupVO.setCount(linkCountVO.getCount());
+                }
+            });
+        });
+
+        return result;
     }
 
     @Override

@@ -16,8 +16,8 @@ public class GroupVO {
     private String gid;
     //分组名称
     private String name;
-    //创建人用户名
-    private String username;
+    // 当前分组下的短链接数量
+    private Integer count = 0;
     // 自定义排序
     @TableField(fill = FieldFill.INSERT)
     private Integer sortOrder;
