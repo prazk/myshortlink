@@ -5,6 +5,7 @@ import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.remote.pojo.dto.LinkAddDTO;
 import com.prazk.myshortlink.admin.remote.pojo.dto.LinkCountDTO;
 import com.prazk.myshortlink.admin.remote.pojo.dto.LinkPageDTO;
+import com.prazk.myshortlink.admin.remote.pojo.dto.LinkUpdateDTO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkAddVO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkPageVO;
@@ -42,5 +43,13 @@ public class ShortLinkController {
     @GetMapping("/count")
     public Result<List<LinkCountVO>> listLinkCount(LinkCountDTO linkCountDTO) {
         return shortLinkRemoteService.listLinkCount(linkCountDTO);
+    }
+
+    /**
+     * 调用中台修改短链接功能
+     */
+    @PutMapping
+    public Result<Void> updateLink(@RequestBody LinkUpdateDTO linkUpdateDTO) {
+        return shortLinkRemoteService.updateLink(linkUpdateDTO);
     }
 }
