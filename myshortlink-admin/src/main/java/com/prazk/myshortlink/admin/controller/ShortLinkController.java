@@ -3,12 +3,16 @@ package com.prazk.myshortlink.admin.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.remote.pojo.dto.LinkAddDTO;
+import com.prazk.myshortlink.admin.remote.pojo.dto.LinkCountDTO;
 import com.prazk.myshortlink.admin.remote.pojo.dto.LinkPageDTO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkAddVO;
+import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkPageVO;
 import com.prazk.myshortlink.admin.remote.service.ShortLinkRemoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,5 +34,13 @@ public class ShortLinkController {
     @PostMapping
     public Result<LinkAddVO> addLink(@RequestBody LinkAddDTO linkAddDTO) {
         return shortLinkRemoteService.addLink(linkAddDTO);
+    }
+
+    /**
+     * 调用中台查询用户的所有分组的短链接数量接口
+     */
+    @GetMapping("/count")
+    public Result<List<LinkCountVO>> listLinkCount(LinkCountDTO linkCountDTO) {
+        return shortLinkRemoteService.listLinkCount(linkCountDTO);
     }
 }

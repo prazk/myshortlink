@@ -1,16 +1,20 @@
 package com.prazk.myshortlink.admin.remote.service;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.remote.pojo.dto.LinkAddDTO;
+import com.prazk.myshortlink.admin.remote.pojo.dto.LinkCountDTO;
 import com.prazk.myshortlink.admin.remote.pojo.dto.LinkPageDTO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkAddVO;
+import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkPageVO;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -41,5 +45,16 @@ public interface ShortLinkRemoteService {
         // 响应结果：JSON字符串
         String result = HttpUtil.post("http://localhost:8089/api/short-link/link/v1/link", requestJson);
         return JSON.parseObject(result, new TypeReference<Result<LinkAddVO>>() {});
+    }
+
+    /**
+     * 调用中台查询用户的所有分组的短链接数量接口
+     */
+    default Result<List<LinkCountVO>> listLinkCount(LinkCountDTO linkCountDTO) {
+        Map<String, Object> map = BeanUtil.beanToMap(linkCountDTO, false, true);
+
+        // 响应结果：JSON字符串
+        String result = HttpUtil.get("http://localhost:8089/api/short-link/link/v1/link/count", map);
+        return JSON.parseObject(result, new TypeReference<Result<List<LinkCountVO>>>() {});
     }
 }
