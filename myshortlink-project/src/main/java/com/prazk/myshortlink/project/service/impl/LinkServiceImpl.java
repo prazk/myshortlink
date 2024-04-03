@@ -14,7 +14,10 @@ import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
 import com.prazk.myshortlink.project.mapper.LinkMapper;
-import com.prazk.myshortlink.project.pojo.dto.*;
+import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
 import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
 import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
@@ -23,10 +26,7 @@ import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 import com.prazk.myshortlink.project.service.LinkGotoService;
 import com.prazk.myshortlink.project.service.LinkService;
 import com.prazk.myshortlink.project.util.HashUtil;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.redisson.api.RBloomFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -142,35 +142,5 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         } else {
             baseMapper.update(link, wrapper);
         }
-    }
-
-    @SneakyThrows
-    @Override
-    public void restore(LinkRestoreDTO linkRestoreDTO, HttpServletRequest request, HttpServletResponse response) {
-        // 先查询布隆过滤器，再查询数据库
-        String shortUri = linkRestoreDTO.getShortUri();
-        if (!shortLinkGenerationBloomFilter.contains(shortUri)) {
-            // 布隆过滤器不存在，则实际一定不存在，说明是无效短链接
-            throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
-        }
-        // 通过路由表的分片键【short_uri】，拿到短链接表的分片键【gid】
-        LambdaQueryWrapper<LinkGoto> linkGotoWrapper = new LambdaQueryWrapper<>();
-        linkGotoWrapper.eq(LinkGoto::getShortUri, shortUri);
-        LinkGoto linkGoto = linkGotoService.getOne(linkGotoWrapper);
-        if (linkGoto == null) {
-            throw new ClientException(BaseErrorCode.SERVICE_ERROR);
-        }
-        String gid = linkGoto.getGid();
-        // 根据短链接表的分片键【gid】，查询数据库
-        LambdaQueryWrapper<Link> linkWrapper = new LambdaQueryWrapper<>();
-        linkWrapper.eq(Link::getGid, gid)
-                .eq(Link::getShortUri, shortUri)
-                .eq(Link::getEnableStatus, CommonConstant.HAS_ENABLED)
-                .eq(Link::getDelFlag, CommonConstant.NOT_DELETED);
-        Link link = baseMapper.selectOne(linkWrapper);
-        if (link == null) {
-            throw new ClientException(BaseErrorCode.SERVICE_ERROR);
-        }
-        response.sendRedirect(link.getOriginUri());
     }
 }
