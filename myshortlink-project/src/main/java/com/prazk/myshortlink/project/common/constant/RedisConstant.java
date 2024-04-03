@@ -8,6 +8,10 @@ public class RedisConstant {
      */
     public static final String GOTO_SHORT_LINK_KEY_PREFIX = "goto:slink:";
     /**
+     * 短链接跳转长链接锁前缀
+     */
+    public static final String LOCK_GOTO_SHORT_LINK_KEY_PREFIX = "lock:goto:slink:";
+    /**
      * 短链接跳转长链接key超时时间
      */
     public static final Duration GOTO_SHORT_LINK_KEY_DURATION = Duration.ofMinutes(3L);
