@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.project.common.config.DomainProperties;
 import com.prazk.myshortlink.project.common.constant.CommonConstant;
 import com.prazk.myshortlink.project.common.constant.LinkConstant;
+import com.prazk.myshortlink.project.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
@@ -26,11 +27,14 @@ import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 import com.prazk.myshortlink.project.service.LinkGotoService;
 import com.prazk.myshortlink.project.service.LinkService;
 import com.prazk.myshortlink.project.util.HashUtil;
+import com.prazk.myshortlink.project.util.LinkUtil;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +45,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
     private final DomainProperties domainProperties; // 短链接网站域名 my-link.cn，改hosts
     private final RBloomFilter<String> shortLinkGenerationBloomFilter;
     private final LinkGotoService linkGotoService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     @Transactional
@@ -75,6 +80,14 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
 
         LinkAddVO linkAddVO = new LinkAddVO();
         BeanUtil.copyProperties(link, linkAddVO);
+        // 缓存预热
+        String shortUri = link.getShortUri();
+        String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
+        Duration expire = LinkUtil.getLinkExpireDuraion(ValidDateTypeEnum.fromType(link.getValidDateType()), link.getValidDate());
+        if (Duration.ZERO.equals(expire)) {
+            throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
+        }
+        stringRedisTemplate.opsForValue().set(key, shortUri, expire);
         return linkAddVO;
     }
 
