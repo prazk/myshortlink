@@ -47,18 +47,23 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             // 布隆过滤器不存在，则实际一定不存在，说明是无效短链接
             throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
         }
-        // TODO 布隆过滤器存在，则实际可能不存在，仍然存在缓存穿透问题
+        // 布隆过滤器存在，则实际可能不存在，仍然存在缓存穿透问题，再采用缓存空值的方法解决缓存穿透问题
+        // 但是对于大量请求，使用不同的且不存在于数据库的key进行访问，会缓存大量的空值数据
         // 查询Redis缓存：key【短链接】，value【原始链接】
         String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
         String originUri = stringRedisTemplate.opsForValue().get(key);
-        if (!StrUtil.isBlank(originUri)) {
+        if (!StrUtil.isBlank(originUri)) { // 不为null且不为空
             log.info("缓存命中");
             // 重定向结果
             response.sendRedirect(originUri);
             return;
         }
+        if ("".equals(originUri)) {
+            log.info("查询到空数据");
+            throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
+        }
+        // 查询到null，缓存未命中，访问数据库
         log.info("缓存未命中");
-        // 缓存未命中，访问数据库
         // 存在缓存击穿问题：一个热点key失效，同时大量请求访问这个key，导致大量请求访问到数据库
         // 分布式锁解决缓存击穿问题，锁对象是短链接
         RLock lock = redissonClient.getLock(RedisConstant.LOCK_GOTO_SHORT_LINK_KEY_PREFIX + shortUri);
@@ -72,6 +77,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 LinkGoto linkGoto = getOne(linkGotoWrapper);
                 if (linkGoto == null) {
                     log.info("数据库未命中");
+                    // 缓存空值，解决缓存穿透问题
+                    stringRedisTemplate.opsForValue().set(key, "", RedisConstant.GOTO_SHORT_LINK_EMPTY_VALUE_DURATION);
                     throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
                 }
                 String gid = linkGoto.getGid();
@@ -84,6 +91,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 Link link = linkMapper.selectOne(linkWrapper);
                 if (link == null) {
                     log.info("数据库未命中");
+                    // 缓存空值，解决缓存穿透问题
+                    stringRedisTemplate.opsForValue().set(key, "", RedisConstant.GOTO_SHORT_LINK_EMPTY_VALUE_DURATION);
                     throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
                 }
                 // 设置缓存以及超时时间

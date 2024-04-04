@@ -15,4 +15,8 @@ public class RedisConstant {
      * 短链接跳转长链接key超时时间
      */
     public static final Duration GOTO_SHORT_LINK_KEY_DURATION = Duration.ofMinutes(3L);
+    /**
+     * 短链接跳转长链接key，缓存空值超时时间
+     */
+    public static final Duration GOTO_SHORT_LINK_EMPTY_VALUE_DURATION = Duration.ofSeconds(30L);
 }
