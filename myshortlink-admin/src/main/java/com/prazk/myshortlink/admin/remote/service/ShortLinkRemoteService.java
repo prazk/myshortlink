@@ -7,10 +7,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.prazk.myshortlink.admin.common.convention.result.Result;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkAddDTO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkCountDTO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkPageDTO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkUpdateDTO;
+import com.prazk.myshortlink.admin.remote.pojo.dto.*;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkAddVO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.admin.remote.pojo.vo.LinkPageVO;
@@ -72,6 +69,16 @@ public interface ShortLinkRemoteService {
                 .execute()
                 .body();
 
+        return JSON.parseObject(result, new TypeReference<Result<Void>>() {});
+    }
+
+    /**
+     * 调用中台短链接加入回收站功能
+     */
+    default Result<Void> addRecycleBin(RecycleAddDTO recycleAddDTO) {
+        String requestJson = JSON.toJSONString(recycleAddDTO);
+
+        String result = HttpUtil.post("http://localhost:8089/api/short-link/project/recycle-bin/save", requestJson);
         return JSON.parseObject(result, new TypeReference<Result<Void>>() {});
     }
 }

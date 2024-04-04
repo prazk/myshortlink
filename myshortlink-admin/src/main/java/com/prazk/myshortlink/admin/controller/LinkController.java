@@ -17,8 +17,8 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/short-link/admin/v1/short-link")
-public class ShortLinkController {
+@RequestMapping("/api/short-link/admin/link")
+public class LinkController {
 
     private final ShortLinkRemoteService shortLinkRemoteService;
     /**
