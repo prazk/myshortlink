@@ -87,7 +87,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         if (Duration.ZERO.equals(expire)) {
             throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
         }
-        stringRedisTemplate.opsForValue().set(key, shortUri, expire);
+        stringRedisTemplate.opsForValue().set(key, link.getOriginUri(), expire);
         return linkAddVO;
     }
 
