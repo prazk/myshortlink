@@ -48,7 +48,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         if (!shortLinkGenerationBloomFilter.contains(shortUri)) {
             log.info("布隆过滤器未命中");
             // 布隆过滤器不存在，则实际一定不存在，说明是无效短链接
-            throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
+            response.sendRedirect("/link/notfound");
+            return;
         }
         // 布隆过滤器存在，则实际可能不存在，仍然存在缓存穿透问题，再采用缓存空值的方法解决缓存穿透问题
         // 但是对于大量请求，使用不同的且不存在于数据库的key进行访问，会缓存大量的空值数据
@@ -63,7 +64,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         }
         if ("".equals(originUri)) {
             log.info("查询到空数据");
-            throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
+            response.sendRedirect("/link/notfound");
+            return;
         }
         // 查询到null，缓存未命中，访问数据库
         log.info("缓存未命中");
@@ -82,7 +84,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     log.info("数据库未命中");
                     // 缓存空值，解决缓存穿透问题
                     stringRedisTemplate.opsForValue().set(key, "", RedisConstant.GOTO_SHORT_LINK_EMPTY_VALUE_DURATION);
-                    throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
+                    response.sendRedirect("/link/notfound");
+                    return;
                 }
                 String gid = linkGoto.getGid();
                 // 根据短链接表的分片键【gid】，查询数据库，得到原始链接
@@ -96,12 +99,14 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     log.info("数据库未命中");
                     // 缓存空值，解决缓存穿透问题
                     stringRedisTemplate.opsForValue().set(key, "", RedisConstant.GOTO_SHORT_LINK_EMPTY_VALUE_DURATION);
-                    throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
+                    response.sendRedirect("/link/notfound");
+                    return;
                 }
                 // 设置缓存以及超时时间
                 log.info("数据库命中");
                 Duration expire = LinkUtil.getLinkExpireDuraion(ValidDateTypeEnum.fromType(link.getValidDateType()), link.getValidDate());
                 if (expire.equals(Duration.ZERO)) {
+                    log.info("短链接已过期");
                     throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
                 }
                 stringRedisTemplate.opsForValue().set(key, link.getOriginUri(), expire);
