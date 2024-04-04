@@ -12,9 +12,9 @@ public class RedisConstant {
      */
     public static final String LOCK_GOTO_SHORT_LINK_KEY_PREFIX = "lock:goto:slink:";
     /**
-     * 短链接跳转长链接key超时时间
+     * 设置为永久有效时，短链接跳转长链接key超时时间
      */
-    public static final Duration GOTO_SHORT_LINK_KEY_DURATION = Duration.ofMinutes(3L);
+    public static final Duration GOTO_SHORT_LINK_KEY_PERMANENT_DURATION = Duration.ofDays(30L);
     /**
      * 短链接跳转长链接key，缓存空值超时时间
      */

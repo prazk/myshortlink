@@ -33,7 +33,8 @@ public enum BaseErrorCode implements IErrorCode {
 
     // ========== 二级宏观错误码 短链接错误码 ==========
     LINK_NOT_EXISTS_ERROR("A000400", "短链接不存在"),
-    LINK_VALID_DATE_ERROR("A000400", "短链接有效期设置有误"),
+    LINK_VALID_DATE_ERROR("A000401", "短链接有效期设置有误"),
+    LINK_EXPIRED_ERROR("A000402", "短链接已过期"),
 
     // ========== 一级宏观错误码 系统执行出错 ==========
     SERVICE_ERROR("B000001", "系统执行出错"),

@@ -11,4 +11,13 @@ public enum ValidDateTypeEnum {
 
     @Getter
     private int type;
+
+    public static ValidDateTypeEnum fromType(int type) {
+        for (ValidDateTypeEnum enumValue : ValidDateTypeEnum.values()) {
+            if (enumValue.getType() == type) {
+                return enumValue;
+            }
+        }
+        throw new IllegalArgumentException("Invalid type value: " + type);
+    }
 }
