@@ -26,7 +26,7 @@ public class LinkController {
      */
     @GetMapping("/page")
     public Result<IPage<LinkPageVO>> page(LinkPageDTO linkPageDTO) {
-        return shortLinkRemoteService.page(linkPageDTO);
+        return shortLinkRemoteService.pageLink(linkPageDTO);
     }
 
     /**

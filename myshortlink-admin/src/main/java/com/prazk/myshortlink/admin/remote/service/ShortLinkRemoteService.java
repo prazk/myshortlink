@@ -24,7 +24,7 @@ public interface ShortLinkRemoteService {
     /**
      * 调用中台的短链接分页查询功能
      */
-    default Result<IPage<LinkPageVO>> page(LinkPageDTO linkPageDTO) {
+    default Result<IPage<LinkPageVO>> pageLink(LinkPageDTO linkPageDTO) {
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("gid", linkPageDTO.getGid());
         requestMap.put("page", linkPageDTO.getPage());

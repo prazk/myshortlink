@@ -1,10 +1,13 @@
 package com.prazk.myshortlink.project.controller;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.prazk.myshortlink.project.common.convention.result.Result;
 import com.prazk.myshortlink.project.common.convention.result.Results;
 import com.prazk.myshortlink.project.pojo.dto.RecycleAddDTO;
 import com.prazk.myshortlink.project.pojo.dto.RecycleDeleteDTO;
+import com.prazk.myshortlink.project.pojo.dto.RecyclePageDTO;
 import com.prazk.myshortlink.project.pojo.dto.RecycleRecoverDTO;
+import com.prazk.myshortlink.project.pojo.vo.RecyclePageVO;
 import com.prazk.myshortlink.project.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +44,15 @@ public class RecycleBinController {
     public Result<Void> recover(@RequestBody RecycleRecoverDTO recycleRecoverDTO) {
         recycleBinService.recover(recycleRecoverDTO);
         return Results.success();
+    }
+
+    /**
+     * 分页查询回收站短链接
+     */
+    @GetMapping("/page")
+    public Result<IPage<RecyclePageVO>> page(RecyclePageDTO recyclePageDTO) {
+        IPage<RecyclePageVO> result = recycleBinService.page(recyclePageDTO);
+        return Results.success(result);
     }
 
 }

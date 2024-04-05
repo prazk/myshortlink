@@ -1,8 +1,8 @@
 package com.prazk.myshortlink.project.service;
 
-import com.prazk.myshortlink.project.pojo.dto.RecycleAddDTO;
-import com.prazk.myshortlink.project.pojo.dto.RecycleDeleteDTO;
-import com.prazk.myshortlink.project.pojo.dto.RecycleRecoverDTO;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.prazk.myshortlink.project.pojo.dto.*;
+import com.prazk.myshortlink.project.pojo.vo.RecyclePageVO;
 
 public interface RecycleBinService {
 
@@ -11,4 +11,6 @@ public interface RecycleBinService {
     void delete(RecycleDeleteDTO recycleDeleteDTO);
 
     void recover(RecycleRecoverDTO recycleRecoverDTO);
+
+    IPage<RecyclePageVO> page(RecyclePageDTO linkPageDTO);
 }
