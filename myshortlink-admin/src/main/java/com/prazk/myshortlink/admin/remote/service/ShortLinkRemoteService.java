@@ -98,4 +98,11 @@ public interface ShortLinkRemoteService {
 
         return JSON.parseObject(result, new TypeReference<Result<Void>>() {});
     }
+
+    default Result<Void> recoverRecycleBin(RecycleRecoverDTO recycleRecoverDTO) {
+        String requestJson = JSON.toJSONString(recycleRecoverDTO);
+
+        String result = HttpUtil.post("http://localhost:8089/api/short-link/project/recycle-bin/recover", requestJson);
+        return JSON.parseObject(result, new TypeReference<Result<Void>>() {});
+    }
 }

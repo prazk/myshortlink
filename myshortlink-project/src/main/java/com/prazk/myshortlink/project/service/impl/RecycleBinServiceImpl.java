@@ -6,6 +6,7 @@ import com.prazk.myshortlink.project.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.mapper.LinkMapper;
 import com.prazk.myshortlink.project.pojo.dto.RecycleAddDTO;
 import com.prazk.myshortlink.project.pojo.dto.RecycleDeleteDTO;
+import com.prazk.myshortlink.project.pojo.dto.RecycleRecoverDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
 import com.prazk.myshortlink.project.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
@@ -50,5 +51,23 @@ public class RecycleBinServiceImpl implements RecycleBinService {
         // 设置【del_flag】为已删除
         Link link = Link.builder().delFlag(CommonConstant.HAS_DELETED).build();
         linkMapper.update(link, wrapper);
+    }
+
+    @Override
+    public void recover(RecycleRecoverDTO recycleRecoverDTO) {
+        String shortUri = recycleRecoverDTO.getShortUri();
+
+        LambdaUpdateWrapper<Link> wrapper = new LambdaUpdateWrapper<>();
+        wrapper.eq(Link::getGid, recycleRecoverDTO.getGid())
+                .eq(Link::getShortUri, shortUri)
+                .eq(Link::getDelFlag, CommonConstant.NOT_DELETED)
+                .eq(Link::getEnableStatus, CommonConstant.NOT_ENABLED);
+
+        Link link = Link.builder().enableStatus(CommonConstant.HAS_ENABLED).build();
+        linkMapper.update(link, wrapper);
+
+        // 删除缓存中的空值（这里不做预热）
+        String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
+        stringRedisTemplate.delete(key);
     }
 }

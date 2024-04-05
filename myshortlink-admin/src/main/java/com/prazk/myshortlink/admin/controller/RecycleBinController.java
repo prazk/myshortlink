@@ -3,6 +3,7 @@ package com.prazk.myshortlink.admin.controller;
 import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.remote.pojo.dto.RecycleAddDTO;
 import com.prazk.myshortlink.admin.remote.pojo.dto.RecycleDeleteDTO;
+import com.prazk.myshortlink.admin.remote.pojo.dto.RecycleRecoverDTO;
 import com.prazk.myshortlink.admin.remote.service.ShortLinkRemoteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -28,5 +29,13 @@ public class RecycleBinController {
     @DeleteMapping
     public Result<Void> delete(RecycleDeleteDTO recycleDeleteDTO) {
         return shortLinkRemoteService.deleteRecycleBin(recycleDeleteDTO);
+    }
+
+    /**
+     * 调用中台恢复回收站中的短链接接口
+     */
+    @PostMapping("/recover")
+    public Result<Void> recover(@RequestBody RecycleRecoverDTO recycleRecoverDTO) {
+        return shortLinkRemoteService.recoverRecycleBin(recycleRecoverDTO);
     }
 }
