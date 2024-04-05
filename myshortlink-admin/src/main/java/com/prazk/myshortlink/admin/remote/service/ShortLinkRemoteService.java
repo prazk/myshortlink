@@ -81,4 +81,21 @@ public interface ShortLinkRemoteService {
         String result = HttpUtil.post("http://localhost:8089/api/short-link/project/recycle-bin/save", requestJson);
         return JSON.parseObject(result, new TypeReference<Result<Void>>() {});
     }
+
+    /**
+     * 调用中台彻底删除回收站的短链接接口
+     */
+    default Result<Void> deleteRecycleBin(RecycleDeleteDTO recycleDeleteDTO) {
+        String gid = recycleDeleteDTO.getGid();
+        String shortUri = recycleDeleteDTO.getShortUri();
+
+        String result = HttpUtil
+                .createRequest(
+                        Method.DELETE,
+                        "http://localhost:8089/api/short-link/project/recycle-bin?gid=" + gid + "&shortUri=" + shortUri)
+                .execute()
+                .body();
+
+        return JSON.parseObject(result, new TypeReference<Result<Void>>() {});
+    }
 }

@@ -3,12 +3,10 @@ package com.prazk.myshortlink.project.controller;
 import com.prazk.myshortlink.project.common.convention.result.Result;
 import com.prazk.myshortlink.project.common.convention.result.Results;
 import com.prazk.myshortlink.project.pojo.dto.RecycleAddDTO;
+import com.prazk.myshortlink.project.pojo.dto.RecycleDeleteDTO;
 import com.prazk.myshortlink.project.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,4 +23,14 @@ public class RecycleBinController {
         recycleBinService.add(recycleAddDTO);
         return Results.success();
     }
+
+    /**
+     * 彻底删除回收站的短链接
+     */
+    @DeleteMapping
+    public Result<Void> delete(RecycleDeleteDTO recycleDeleteDTO) {
+        recycleBinService.delete(recycleDeleteDTO);
+        return Results.success();
+    }
+
 }
