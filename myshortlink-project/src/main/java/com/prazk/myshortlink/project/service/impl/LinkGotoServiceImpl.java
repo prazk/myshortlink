@@ -1,5 +1,6 @@
 package com.prazk.myshortlink.project.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -17,6 +18,7 @@ import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
 import com.prazk.myshortlink.project.service.LinkGotoService;
 import com.prazk.myshortlink.project.util.LinkUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -62,7 +64,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         if (!StrUtil.isBlank(originUri)) { // 不为null且不为空
             log.info("缓存命中");
             // 统计访问数据
-            doStatistics(shortUri);
+            doStatistics(request, response, shortUri);
             // 重定向结果
             response.sendRedirect(originUri);
             return;
@@ -116,7 +118,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 }
                 stringRedisTemplate.opsForValue().set(key, link.getOriginUri(), expire);
                 // 统计访问数据
-                doStatistics(shortUri);
+                doStatistics(request, response, shortUri);
                 response.sendRedirect(link.getOriginUri());
             } finally {
                 lock.unlock();
@@ -126,9 +128,35 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         }
     }
 
-    private void doStatistics(String shortUri) {
+    private void doStatistics(HttpServletRequest request, HttpServletResponse response,String shortUri) {
         try {
-            LinkAccessStats stats = LinkAccessStats.builder().shortUri(shortUri).build();
+            // UV统计
+            String key = RedisConstant.STATS_UV_KEY_PREFIX + shortUri;
+            Cookie[] cookies = request.getCookies();
+            String value = null;
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if (cookie.getName().equals("uv")) {
+                        value = cookie.getValue();
+                        break;
+                    }
+                }
+            }
+
+            if (value == null) {
+                value = IdUtil.fastSimpleUUID();
+                Cookie uv = new Cookie("uv", value);
+                uv.setMaxAge(3600 * 24 * 30);
+                // 生成的Cookie是用户的唯一标识，即使被不同短链接路径共享，也没关系
+                uv.setPath("/");
+                response.addCookie(uv);
+            }
+
+            stringRedisTemplate.opsForHyperLogLog().add(key, value);
+            Integer uvCount = stringRedisTemplate.opsForHyperLogLog().size(key).intValue();
+
+            // PV统计
+            LinkAccessStats stats = LinkAccessStats.builder().shortUri(shortUri).uv(uvCount).build();
             linkAccessStatsMapper.recordBasicAccessStats(stats);
         } catch (Exception ex) {
             log.info("统计数据失败", ex);

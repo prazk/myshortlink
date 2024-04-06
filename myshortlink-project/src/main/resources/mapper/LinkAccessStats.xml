@@ -10,6 +10,6 @@
             t_link_access_stats (short_uri, pv, uv, uip, access_date, access_hour, access_weekday, create_time, update_time, del_flag)
         VALUES (#{et.shortUri}, 1, 1, 1, #{et.accessDate}, #{et.accessHour}, #{et.accessWeekday}, #{et.createTime}, #{et.updateTime}, #{et.delFlag})
         ON DUPLICATE KEY UPDATE
-             pv = pv + 1;
+             pv = pv + 1, uv = #{et.uv};
     </insert>
 </mapper>
