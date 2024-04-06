@@ -8,10 +8,12 @@ import com.prazk.myshortlink.project.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
+import com.prazk.myshortlink.project.mapper.LinkAccessStatsMapper;
 import com.prazk.myshortlink.project.mapper.LinkGotoMapper;
 import com.prazk.myshortlink.project.mapper.LinkMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkRestoreDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
+import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
 import com.prazk.myshortlink.project.service.LinkGotoService;
 import com.prazk.myshortlink.project.util.LinkUtil;
@@ -38,6 +40,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final LinkMapper linkMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
+    private final LinkAccessStatsMapper linkAccessStatsMapper;
 
     @SneakyThrows
     @Override
@@ -58,6 +61,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         String originUri = stringRedisTemplate.opsForValue().get(key);
         if (!StrUtil.isBlank(originUri)) { // 不为null且不为空
             log.info("缓存命中");
+            // 统计访问数据
+            doStatistics(shortUri);
             // 重定向结果
             response.sendRedirect(originUri);
             return;
@@ -110,12 +115,23 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
                 }
                 stringRedisTemplate.opsForValue().set(key, link.getOriginUri(), expire);
+                // 统计访问数据
+                doStatistics(shortUri);
                 response.sendRedirect(link.getOriginUri());
             } finally {
                 lock.unlock();
             }
         } else {
             throw new ClientException(BaseErrorCode.SERVICE_BUSY_ERROR);
+        }
+    }
+
+    private void doStatistics(String shortUri) {
+        try {
+            LinkAccessStats stats = LinkAccessStats.builder().shortUri(shortUri).build();
+            linkAccessStatsMapper.recordBasicAccessStats(stats);
+        } catch (Exception ex) {
+            log.info("统计数据失败", ex);
         }
     }
 }
