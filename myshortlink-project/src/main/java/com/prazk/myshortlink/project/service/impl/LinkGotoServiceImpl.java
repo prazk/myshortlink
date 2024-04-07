@@ -182,17 +182,22 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             reqParams.put("ip", actualIP);
             String respBody = HttpUtil.get("https://restapi.amap.com/v3/ip", reqParams);
             AmapIPLocale amapIPLocale = JSONUtil.toBean(respBody, AmapIPLocale.class);
+            if (amapIPLocale.getAdcode().equals("10000")) {
+                if (!StrUtil.isBlank(amapIPLocale.getCity())) { // 有效IP地址（不是局域网、不是非法IP、不是国外IP）
+                    LinkLocaleStats localeStats = LinkLocaleStats.builder()
+                            .country("中国")
+                            .province(amapIPLocale.getProvince())
+                            .adcode(amapIPLocale.getAdcode())
+                            .city(amapIPLocale.getCity())
+                            .shortUri(shortUri)
+                            .updateTime(LocalDateTime.now())
+                            .build();
 
-            LinkLocaleStats localeStats = LinkLocaleStats.builder()
-                    .country("中国")
-                    .province(amapIPLocale.getProvince())
-                    .adcode(amapIPLocale.getAdcode())
-                    .city(amapIPLocale.getCity())
-                    .shortUri(shortUri)
-                    .updateTime(LocalDateTime.now())
-                    .build();
-
-            linkLocaleStatsMapper.recordLocalAccessStats(localeStats);
+                    linkLocaleStatsMapper.recordLocalAccessStats(localeStats);
+                }
+            } else {
+                log.error("调用高德开放地图IP定位接口失败，错误信息：{}", amapIPLocale.getInfo());
+            }
 
             // PV统计
             LinkAccessStats accessStats = LinkAccessStats.builder()
