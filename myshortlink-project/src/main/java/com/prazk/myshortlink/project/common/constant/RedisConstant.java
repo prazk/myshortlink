@@ -12,6 +12,10 @@ public class RedisConstant {
      */
     public static final String STATS_UV_KEY_PREFIX = "stats:uv:";
     /**
+     * IP统计时HyperLogLog的key前缀
+     */
+    public static final String STATS_IP_KEY_PREFIX = "stats:ip:";
+    /**
      * 短链接跳转长链接锁前缀
      */
     public static final String LOCK_GOTO_SHORT_LINK_KEY_PREFIX = "lock:goto:slink:";

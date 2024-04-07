@@ -80,7 +80,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
 
         LinkAddVO linkAddVO = new LinkAddVO();
         BeanUtil.copyProperties(link, linkAddVO);
-        // 缓存预热
+        // 缓存预热：先操作数据库，再操作缓存
         String shortUri = link.getShortUri();
         String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
         Duration expire = LinkUtil.getLinkExpireDuraion(ValidDateTypeEnum.fromType(link.getValidDateType()), link.getValidDate());

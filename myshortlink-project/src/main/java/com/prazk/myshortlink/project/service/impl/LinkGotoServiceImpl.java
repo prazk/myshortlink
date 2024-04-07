@@ -131,7 +131,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private void doStatistics(HttpServletRequest request, HttpServletResponse response,String shortUri) {
         try {
             // UV统计
-            String key = RedisConstant.STATS_UV_KEY_PREFIX + shortUri;
+            String uvKey = RedisConstant.STATS_UV_KEY_PREFIX + shortUri;
             Cookie[] cookies = request.getCookies();
             String value = null;
             if (cookies != null) {
@@ -152,11 +152,24 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 response.addCookie(uv);
             }
 
-            stringRedisTemplate.opsForHyperLogLog().add(key, value);
-            Integer uvCount = stringRedisTemplate.opsForHyperLogLog().size(key).intValue();
+            stringRedisTemplate.opsForHyperLogLog().add(uvKey, value);
+            Integer uvCount = stringRedisTemplate.opsForHyperLogLog().size(uvKey).intValue();
+
+            // IP统计
+            String ipKey = RedisConstant.STATS_IP_KEY_PREFIX + shortUri;
+            String actualIP = LinkUtil.getActualIP(request);
+            if (!"unknown".equals(actualIP)) {
+                stringRedisTemplate.opsForHyperLogLog().add(ipKey, actualIP);
+            }
+            Integer ipCount = stringRedisTemplate.opsForHyperLogLog().size(ipKey).intValue();
 
             // PV统计
-            LinkAccessStats stats = LinkAccessStats.builder().shortUri(shortUri).uv(uvCount).build();
+            LinkAccessStats stats = LinkAccessStats.builder()
+                    .shortUri(shortUri)
+                    .uv(uvCount)
+                    .uip(ipCount)
+                    .build();
+
             linkAccessStatsMapper.recordBasicAccessStats(stats);
         } catch (Exception ex) {
             log.info("统计数据失败", ex);
