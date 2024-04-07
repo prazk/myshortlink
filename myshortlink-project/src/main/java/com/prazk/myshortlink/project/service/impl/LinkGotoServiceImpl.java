@@ -49,6 +49,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
+    private final LinkBrowserStatsMapper linkBrowserStatsMapper;
 
     @Value("${amap.region-stats.key}")
     private String amapRegionStatsKey;
@@ -196,18 +197,24 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 log.error("调用高德开放地图IP定位接口失败，错误信息：{}", amapIPLocale.getInfo());
             }
 
-            // 操作系统统计
+            // 操作系统统计、浏览器统计
             String userAgent = request.getHeader("User-Agent");
             if (userAgent != null) {
                 UserAgent agent = UserAgentUtil.parse(userAgent);
                 String osName = agent.getOs().getName();
+                String browserName = agent.getBrowser().getName();
 
                 LinkOsStats osStats = LinkOsStats.builder()
                         .os(osName)
                         .shortUri(shortUri)
                         .build();
-
                 linkOsStatsMapper.recordOsAccessStats(osStats);
+
+                LinkBrowserStats linkBrowserStats = LinkBrowserStats.builder()
+                        .browser(browserName)
+                        .shortUri(shortUri)
+                        .build();
+                linkBrowserStatsMapper.recordBrowserAccessStats(linkBrowserStats);
             }
 
             // PV统计

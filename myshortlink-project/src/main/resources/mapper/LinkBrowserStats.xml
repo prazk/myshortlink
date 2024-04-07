@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.prazk.myshortlink.project.mapper.LinkBrowserStatsMapper">
+
+    <insert id="recordBrowserAccessStats">
+        INSERT INTO t_link_browser_stats (short_uri, cnt, browser, access_date, create_time, update_time, del_flag)
+        VALUES (#{et.shortUri}, 1, #{et.browser}, #{et.accessDate}, #{et.createTime}, #{et.updateTime}, #{et.delFlag})
+        ON DUPLICATE KEY UPDATE
+        cnt = cnt + 1, update_time = #{et.updateTime};
+    </insert>
+</mapper>
