@@ -12,4 +12,10 @@
         ON DUPLICATE KEY UPDATE
              pv = pv + 1, uv = #{et.uv}, uip = #{et.uip}, update_time = #{et.updateTime};
     </insert>
+
+    <select id="selectStats" resultType="com.prazk.myshortlink.project.pojo.vo.LinkAccessDailyStatsVO">
+        select sum(pv) as pv, sum(uv) as uv, sum(uip) as uip, access_date as accessDate
+        from t_link_access_stats
+        where short_uri = #{shortUri} and access_date = #{accessDate}
+    </select>
 </mapper>

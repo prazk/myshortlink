@@ -237,7 +237,6 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     .build();
             linkAccessStatsMapper.recordBasicAccessStats(accessStats);
 
-
             // 记录访问日志
             LinkAccessLogs linkAccessLogs = LinkAccessLogs.builder()
                     .shortUri(shortUri)
