@@ -2,6 +2,8 @@ package com.prazk.myshortlink.project.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.project.common.constant.CommonConstant;
@@ -11,11 +13,14 @@ import com.prazk.myshortlink.project.common.convention.exception.ClientException
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
 import com.prazk.myshortlink.project.mapper.LinkAccessStatsMapper;
 import com.prazk.myshortlink.project.mapper.LinkGotoMapper;
+import com.prazk.myshortlink.project.mapper.LinkLocaleStatsMapper;
 import com.prazk.myshortlink.project.mapper.LinkMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkRestoreDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
 import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
+import com.prazk.myshortlink.project.pojo.entity.LinkLocaleStats;
+import com.prazk.myshortlink.project.remote.resp.AmapIPLocale;
 import com.prazk.myshortlink.project.service.LinkGotoService;
 import com.prazk.myshortlink.project.util.LinkUtil;
 import jakarta.servlet.http.Cookie;
@@ -27,10 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -43,6 +52,10 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+
+    @Value("${amap.region-stats.key}")
+    private String amapRegionStatsKey;
 
     @SneakyThrows
     @Override
@@ -128,7 +141,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         }
     }
 
-    private void doStatistics(HttpServletRequest request, HttpServletResponse response,String shortUri) {
+    private void doStatistics(HttpServletRequest request, HttpServletResponse response, String shortUri) {
         try {
             // UV统计
             String uvKey = RedisConstant.STATS_UV_KEY_PREFIX + shortUri;
@@ -163,14 +176,33 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             }
             Integer ipCount = stringRedisTemplate.opsForHyperLogLog().size(ipKey).intValue();
 
+            // 地区统计
+            Map<String, Object> reqParams = new HashMap<>();
+            reqParams.put("key", amapRegionStatsKey);
+            reqParams.put("ip", actualIP);
+            String respBody = HttpUtil.get("https://restapi.amap.com/v3/ip", reqParams);
+            AmapIPLocale amapIPLocale = JSONUtil.toBean(respBody, AmapIPLocale.class);
+
+            LinkLocaleStats localeStats = LinkLocaleStats.builder()
+                    .country("中国")
+                    .province(amapIPLocale.getProvince())
+                    .adcode(amapIPLocale.getAdcode())
+                    .city(amapIPLocale.getCity())
+                    .shortUri(shortUri)
+                    .updateTime(LocalDateTime.now())
+                    .build();
+
+            linkLocaleStatsMapper.recordLocalAccessStats(localeStats);
+
             // PV统计
-            LinkAccessStats stats = LinkAccessStats.builder()
+            LinkAccessStats accessStats = LinkAccessStats.builder()
                     .shortUri(shortUri)
                     .uv(uvCount)
                     .uip(ipCount)
+                    .updateTime(LocalDateTime.now())
                     .build();
 
-            linkAccessStatsMapper.recordBasicAccessStats(stats);
+            linkAccessStatsMapper.recordBasicAccessStats(accessStats);
         } catch (Exception ex) {
             log.info("统计数据失败", ex);
         }
