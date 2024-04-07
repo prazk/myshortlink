@@ -3,6 +3,8 @@ package com.prazk.myshortlink.project.service.impl;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -11,15 +13,9 @@ import com.prazk.myshortlink.project.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
-import com.prazk.myshortlink.project.mapper.LinkAccessStatsMapper;
-import com.prazk.myshortlink.project.mapper.LinkGotoMapper;
-import com.prazk.myshortlink.project.mapper.LinkLocaleStatsMapper;
-import com.prazk.myshortlink.project.mapper.LinkMapper;
+import com.prazk.myshortlink.project.mapper.*;
 import com.prazk.myshortlink.project.pojo.dto.LinkRestoreDTO;
-import com.prazk.myshortlink.project.pojo.entity.Link;
-import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
-import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
-import com.prazk.myshortlink.project.pojo.entity.LinkLocaleStats;
+import com.prazk.myshortlink.project.pojo.entity.*;
 import com.prazk.myshortlink.project.remote.resp.AmapIPLocale;
 import com.prazk.myshortlink.project.service.LinkGotoService;
 import com.prazk.myshortlink.project.util.LinkUtil;
@@ -52,6 +48,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final RedissonClient redissonClient;
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkOsStatsMapper linkOsStatsMapper;
 
     @Value("${amap.region-stats.key}")
     private String amapRegionStatsKey;
@@ -197,6 +194,20 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 linkLocaleStatsMapper.recordLocalAccessStats(localeStats);
             } else {
                 log.error("调用高德开放地图IP定位接口失败，错误信息：{}", amapIPLocale.getInfo());
+            }
+
+            // 操作系统统计
+            String userAgent = request.getHeader("User-Agent");
+            if (userAgent != null) {
+                UserAgent agent = UserAgentUtil.parse(userAgent);
+                String osName = agent.getOs().getName();
+
+                LinkOsStats osStats = LinkOsStats.builder()
+                        .os(osName)
+                        .shortUri(shortUri)
+                        .build();
+
+                linkOsStatsMapper.recordOsAccessStats(osStats);
             }
 
             // PV统计
