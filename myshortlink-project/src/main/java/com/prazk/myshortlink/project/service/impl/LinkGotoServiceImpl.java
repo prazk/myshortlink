@@ -51,6 +51,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
+    private final LinkAccessLogsMapper linkAccessLogsMapper;
 
     @Value("${amap.region-stats.key}")
     private String amapRegionStatsKey;
@@ -140,30 +141,31 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     }
 
     private void doStatistics(HttpServletRequest request, HttpServletResponse response, String shortUri) {
+        // TODO 重构，优化为异步方案
         try {
             // UV统计
             String uvKey = RedisConstant.STATS_UV_KEY_PREFIX + shortUri;
             Cookie[] cookies = request.getCookies();
-            String value = null;
+            String userIdentifier = null;
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
                     if (cookie.getName().equals("uv")) {
-                        value = cookie.getValue();
+                        userIdentifier = cookie.getValue();
                         break;
                     }
                 }
             }
 
-            if (value == null) {
-                value = IdUtil.fastSimpleUUID();
-                Cookie uv = new Cookie("uv", value);
+            if (userIdentifier == null) {
+                userIdentifier = IdUtil.fastSimpleUUID();
+                Cookie uv = new Cookie("uv", userIdentifier);
                 uv.setMaxAge(3600 * 24 * 30);
                 // 生成的Cookie是用户的唯一标识，即使被不同短链接路径共享，也没关系
                 uv.setPath("/");
                 response.addCookie(uv);
             }
 
-            stringRedisTemplate.opsForHyperLogLog().add(uvKey, value);
+            stringRedisTemplate.opsForHyperLogLog().add(uvKey, userIdentifier);
             Integer uvCount = stringRedisTemplate.opsForHyperLogLog().size(uvKey).intValue();
 
             // IP统计
@@ -200,11 +202,13 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
 
             // 操作系统统计、浏览器统计、设备类型统计
             String userAgent = request.getHeader("User-Agent");
+            String osName = "Unknown", browserName = "Unknown";
+            int deviceType = 0;
             if (userAgent != null) {
                 UserAgent agent = UserAgentUtil.parse(userAgent);
-                String osName = agent.getOs().getName();
-                String browserName = agent.getBrowser().getName();
-                Integer deviceType = agent.isMobile() ? 1 : 0; // 设备种类 0桌面端 1移动端
+                osName = agent.getOs().getName();
+                browserName = agent.getBrowser().getName();
+                deviceType = agent.isMobile() ? 1 : 0; // 设备种类 0桌面端 1移动端
 
                 LinkOsStats osStats = LinkOsStats.builder()
                         .os(osName)
@@ -231,8 +235,19 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     .uv(uvCount)
                     .uip(ipCount)
                     .build();
-
             linkAccessStatsMapper.recordBasicAccessStats(accessStats);
+
+
+            // 记录访问日志
+            LinkAccessLogs linkAccessLogs = LinkAccessLogs.builder()
+                    .shortUri(shortUri)
+                    .user(userIdentifier)
+                    .browser(browserName)
+                    .os(osName)
+                    .device(deviceType)
+                    .ip(actualIP)
+                    .build();
+            linkAccessLogsMapper.recordAccessLogs(linkAccessLogs);
         } catch (Exception ex) {
             log.info("统计数据失败", ex);
         }

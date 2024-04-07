@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.prazk.myshortlink.project.mapper.LinkAccessLogsMapper">
+
+    <insert id="recordAccessLogs">
+        INSERT INTO
+            t_link_access_logs (short_uri, user, browser, os, device, ip, create_time, del_flag)
+        VALUES (#{et.shortUri}, #{et.user}, #{et.browser}, #{et.os}, #{et.device}, #{et.ip}, #{et.createTime}, #{et.delFlag})
+    </insert>
+</mapper>
