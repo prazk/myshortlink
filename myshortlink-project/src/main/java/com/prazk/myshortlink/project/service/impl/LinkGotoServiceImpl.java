@@ -50,6 +50,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
+    private final LinkDeviceStatsMapper linkDeviceStatsMapper;
 
     @Value("${amap.region-stats.key}")
     private String amapRegionStatsKey;
@@ -197,12 +198,13 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 log.error("调用高德开放地图IP定位接口失败，错误信息：{}", amapIPLocale.getInfo());
             }
 
-            // 操作系统统计、浏览器统计
+            // 操作系统统计、浏览器统计、设备类型统计
             String userAgent = request.getHeader("User-Agent");
             if (userAgent != null) {
                 UserAgent agent = UserAgentUtil.parse(userAgent);
                 String osName = agent.getOs().getName();
                 String browserName = agent.getBrowser().getName();
+                Integer deviceType = agent.isMobile() ? 1 : 0; // 设备种类 0桌面端 1移动端
 
                 LinkOsStats osStats = LinkOsStats.builder()
                         .os(osName)
@@ -215,6 +217,12 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                         .shortUri(shortUri)
                         .build();
                 linkBrowserStatsMapper.recordBrowserAccessStats(linkBrowserStats);
+
+                LinkDeviceStats linkDeviceStats = LinkDeviceStats.builder()
+                        .device(deviceType)
+                        .shortUri(shortUri)
+                        .build();
+                linkDeviceStatsMapper.recordDeviceAccessStats(linkDeviceStats);
             }
 
             // PV统计

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class LinkBrowserStats {
+public class LinkDeviceStats {
     //ID
     @TableId(type = IdType.AUTO)
     private Long id;
@@ -24,8 +24,8 @@ public class LinkBrowserStats {
     private String shortUri;
     //访问量
     private Integer cnt;
-    //浏览器名称
-    private String browser;
+    //设备种类
+    private Integer device;
     //日期
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDate accessDate;
@@ -38,5 +38,6 @@ public class LinkBrowserStats {
     //删除标识 0：未删除 1：已删除
     @TableField(fill = FieldFill.INSERT)
     private Integer delFlag;
+
 }
 
