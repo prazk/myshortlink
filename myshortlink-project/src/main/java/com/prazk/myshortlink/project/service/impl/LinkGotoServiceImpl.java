@@ -37,7 +37,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -182,19 +181,20 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             reqParams.put("ip", actualIP);
             String respBody = HttpUtil.get("https://restapi.amap.com/v3/ip", reqParams);
             AmapIPLocale amapIPLocale = JSONUtil.toBean(respBody, AmapIPLocale.class);
-            if (amapIPLocale.getAdcode().equals("10000")) {
-                if (!StrUtil.isBlank(amapIPLocale.getCity())) { // 有效IP地址（不是局域网、不是非法IP、不是国外IP）
-                    LinkLocaleStats localeStats = LinkLocaleStats.builder()
+            if (amapIPLocale.getInfocode().equals("10000")) {
+                String city = amapIPLocale.getCity().equals("[]") ? "未知" : amapIPLocale.getCity();
+                String adcode = amapIPLocale.getAdcode().equals("[]") ? "未知" : amapIPLocale.getAdcode();
+                String province = amapIPLocale.getProvince().equals("[]") ? "未知" : amapIPLocale.getProvince();
+
+                LinkLocaleStats localeStats = LinkLocaleStats.builder()
                             .country("中国")
-                            .province(amapIPLocale.getProvince())
-                            .adcode(amapIPLocale.getAdcode())
-                            .city(amapIPLocale.getCity())
+                            .province(province)
+                            .adcode(adcode)
+                            .city(city)
                             .shortUri(shortUri)
-                            .updateTime(LocalDateTime.now())
                             .build();
 
-                    linkLocaleStatsMapper.recordLocalAccessStats(localeStats);
-                }
+                linkLocaleStatsMapper.recordLocalAccessStats(localeStats);
             } else {
                 log.error("调用高德开放地图IP定位接口失败，错误信息：{}", amapIPLocale.getInfo());
             }
@@ -204,7 +204,6 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     .shortUri(shortUri)
                     .uv(uvCount)
                     .uip(ipCount)
-                    .updateTime(LocalDateTime.now())
                     .build();
 
             linkAccessStatsMapper.recordBasicAccessStats(accessStats);
