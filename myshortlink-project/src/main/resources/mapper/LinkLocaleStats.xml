@@ -12,4 +12,12 @@
         ON DUPLICATE KEY UPDATE
             cnt = cnt + 1, update_time = #{et.updateTime};
     </insert>
+    <select id="selectLocaleStats" resultType="com.prazk.myshortlink.project.pojo.vo.LinkLocaleStatsVO">
+        SELECT province as locale, SUM(cnt) as cnt
+        FROM t_link_locale_stats
+        WHERE short_uri = #{shortUri}
+        AND access_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY province
+        ORDER BY cnt DESC
+    </select>
 </mapper>

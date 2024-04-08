@@ -3,29 +3,34 @@ package com.prazk.myshortlink.project.service.impl;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.mapper.LinkAccessStatsMapper;
+import com.prazk.myshortlink.project.mapper.LinkLocaleStatsMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
 import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.pojo.vo.LinkAccessDailyStatsVO;
-import com.prazk.myshortlink.project.pojo.vo.LinkAccessStatsVO;
-import com.prazk.myshortlink.project.service.LinkAccessStatsService;
+import com.prazk.myshortlink.project.pojo.vo.LinkLocaleStatsVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkStatsVO;
+import com.prazk.myshortlink.project.service.LinkStatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class LinkAccessStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, LinkAccessStats> implements LinkAccessStatsService {
+public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, LinkAccessStats> implements LinkStatsService {
 
     private final LinkAccessStatsMapper linkAccessStatsMapper;
+    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
 
     /**
-     * 查询指定日期内总的PV、UV、IP，以及每天的PV、UV、IP
+     * 查询单个短链接的所有统计数据
      */
     @Override
-    public LinkAccessStatsVO getStats(LinkAccessStatsDTO linkAccessStatsDTO) {
+    public LinkStatsVO getStats(LinkAccessStatsDTO linkAccessStatsDTO) {
+        // 查询指定日期内总的PV、UV、IP，以及每天的PV、UV、IP
         String shortUri = linkAccessStatsDTO.getShortUri();
         LocalDate startDate = linkAccessStatsDTO.getStartDate();
         LocalDate endDate = linkAccessStatsDTO.getEndDate();
@@ -49,11 +54,23 @@ public class LinkAccessStatsServiceImpl extends ServiceImpl<LinkAccessStatsMappe
             }
         }
 
-        return LinkAccessStatsVO.builder()
+        // 查询地区统计数据
+        // 查询出指定时间范围内总访问量最高的前 10 个省份，占比以及次数，并按降序排序
+        List<LinkLocaleStatsVO> localeStats = linkLocaleStatsMapper.selectLocaleStats(startDate, endDate, shortUri);
+        int total = localeStats.stream().mapToInt(LinkLocaleStatsVO::getCnt).sum();
+        DecimalFormat df = new DecimalFormat("#.##");
+        localeStats.forEach(vo -> vo.setRatio(Double.parseDouble(df.format((double) vo.getCnt() / total))));
+
+
+
+        LinkStatsVO vo = LinkStatsVO.builder()
                 .uip(uip)
                 .pv(pv)
                 .uv(uv)
                 .daily(daily)
+                .localeStats(localeStats)
                 .build();
+
+        return vo;
     }
 }
