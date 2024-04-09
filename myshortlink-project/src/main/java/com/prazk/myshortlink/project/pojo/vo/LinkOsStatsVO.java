@@ -5,6 +5,6 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper=true)
-public class LinkLocaleStatsVO extends LinkInfoStatsAbstractVO {
-    private String locale;
+public class LinkOsStatsVO extends LinkInfoStatsAbstractVO {
+    private String os;
 }

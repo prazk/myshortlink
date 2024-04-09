@@ -35,4 +35,16 @@ public class LinkStatsVO {
      * 一周分布：查询本周时间范围内的指定短链接每天的访问PV数
      */
     private List<Integer> weekdayStats;
+    /**
+     * 统计操作系统
+     */
+    private List<LinkOsStatsVO> osStats;
+    /**
+     * 统计浏览器
+     */
+    private List<LinkBrowserStatsVO> browserStats;
+    /**
+     * 统计设备类型
+     */
+    private List<LinkDeviceStatsVO> deviceStats;
 }

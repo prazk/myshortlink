@@ -10,4 +10,12 @@
         ON DUPLICATE KEY UPDATE
         cnt = cnt + 1, update_time = #{et.updateTime};
     </insert>
+
+    <select id="selectBrowserStats"
+            resultType="com.prazk.myshortlink.project.pojo.vo.LinkBrowserStatsVO">
+        SELECT browser, SUM(cnt) as cnt
+        FROM t_link_browser_stats
+        WHERE short_uri = #{shortUri}
+        GROUP BY browser
+    </select>
 </mapper>
