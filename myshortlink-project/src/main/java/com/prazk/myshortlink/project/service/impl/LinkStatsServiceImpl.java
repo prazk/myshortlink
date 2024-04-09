@@ -6,6 +6,7 @@ import com.prazk.myshortlink.project.mapper.LinkAccessStatsMapper;
 import com.prazk.myshortlink.project.mapper.LinkLocaleStatsMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
 import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
+import com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery;
 import com.prazk.myshortlink.project.pojo.vo.LinkAccessDailyStatsVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkLocaleStatsVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkStatsVO;
@@ -15,8 +16,10 @@ import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -61,7 +64,15 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         DecimalFormat df = new DecimalFormat("#.##");
         localeStats.forEach(vo -> vo.setRatio(Double.parseDouble(df.format((double) vo.getCnt() / total))));
 
-
+        // 查询当前小时和前23小时内，该短链接的访问量分布
+        Integer nowHour = LocalDateTime.now().getHour();
+        LocalDate today = LocalDate.now();
+        List<Integer> distribution = new ArrayList<>(24);
+        Map<Integer, LinkDailyDistributionQuery> queries = linkAccessStatsMapper.selectDailyDistribution(nowHour, today.minusDays(1), today, shortUri);
+        for (int i = nowHour + 1; i < nowHour + 1 + 24; i++) {
+            int h = i % 24;
+            distribution.add(queries.containsKey(h) ? queries.get(h).getCnt() : 0);
+        }
 
         LinkStatsVO vo = LinkStatsVO.builder()
                 .uip(uip)
@@ -69,6 +80,7 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
                 .uv(uv)
                 .daily(daily)
                 .localeStats(localeStats)
+                .distribution(distribution)
                 .build();
 
         return vo;

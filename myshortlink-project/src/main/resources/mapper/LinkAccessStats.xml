@@ -18,4 +18,17 @@
         from t_link_access_stats
         where short_uri = #{shortUri} and access_date = #{accessDate}
     </select>
+
+    <select id="selectDailyDistribution" resultType="com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery">
+        SELECT pv as cnt, access_hour as hour
+        FROM t_link_access_stats
+        WHERE
+            short_uri = #{shortUri}
+          AND
+            (
+                (access_date = #{yesterday} AND access_hour > #{nowHour})
+                    OR
+                (access_date = #{today})
+            )
+    </select>
 </mapper>

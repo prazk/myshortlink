@@ -23,4 +23,8 @@ public class LinkStatsVO {
      * 查询时间范围内的访问地区统计
      */
     private List<LinkLocaleStatsVO> localeStats;
+    /**
+     * 近 24小时内，该短链接的访问量分布
+     */
+    private List<Integer> distribution;
 }
