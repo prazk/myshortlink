@@ -6,8 +6,8 @@
 
     <insert id="recordAccessLogs">
         INSERT INTO
-            t_link_access_logs (short_uri, user, browser, os, device, ip, create_time, del_flag)
-        VALUES (#{et.shortUri}, #{et.user}, #{et.browser}, #{et.os}, #{et.device}, #{et.ip}, #{et.createTime}, #{et.delFlag})
+            t_link_access_logs (short_uri, user, browser, os, device, ip, province, city, create_time, del_flag)
+        VALUES (#{et.shortUri}, #{et.user}, #{et.browser}, #{et.os}, #{et.device}, #{et.ip}, #{et.province}, #{et.city}, #{et.createTime}, #{et.delFlag})
     </insert>
 
     <select id="selectTopIP" resultType="com.prazk.myshortlink.project.pojo.vo.LinkTopIPStatsVO">

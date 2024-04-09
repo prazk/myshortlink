@@ -182,10 +182,11 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             reqParams.put("ip", actualIP);
             String respBody = HttpUtil.get("https://restapi.amap.com/v3/ip", reqParams);
             AmapIPLocale amapIPLocale = JSONUtil.toBean(respBody, AmapIPLocale.class);
+            String city = "未知", province = "未知";
             if (amapIPLocale.getInfocode().equals("10000")) {
-                String city = amapIPLocale.getCity().equals("[]") ? "未知" : amapIPLocale.getCity();
+                city = amapIPLocale.getCity().equals("[]") ? "未知" : amapIPLocale.getCity();
                 String adcode = amapIPLocale.getAdcode().equals("[]") ? "未知" : amapIPLocale.getAdcode();
-                String province = amapIPLocale.getProvince().equals("[]") ? "未知" : amapIPLocale.getProvince();
+                province = amapIPLocale.getProvince().equals("[]") ? "未知" : amapIPLocale.getProvince();
 
                 LinkLocaleStats localeStats = LinkLocaleStats.builder()
                             .country("中国")
@@ -245,6 +246,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     .os(osName)
                     .device(deviceType)
                     .ip(actualIP)
+                    .province(province)
+                    .city(city)
                     .build();
             linkAccessLogsMapper.recordAccessLogs(linkAccessLogs);
         } catch (Exception ex) {

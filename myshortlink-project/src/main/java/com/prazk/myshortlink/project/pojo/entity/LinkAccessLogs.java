@@ -33,6 +33,10 @@ public class LinkAccessLogs {
     private Integer device;
     //IP
     private String ip;
+    //省份
+    private String province;
+    //市名称
+    private String city;
     //创建时间
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
