@@ -5,7 +5,8 @@ import com.prazk.myshortlink.project.common.convention.exception.ClientException
 import com.prazk.myshortlink.project.mapper.*;
 import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
 import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
-import com.prazk.myshortlink.project.pojo.query.*;
+import com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery;
+import com.prazk.myshortlink.project.pojo.query.LinkWeekdayStatsQuery;
 import com.prazk.myshortlink.project.pojo.vo.*;
 import com.prazk.myshortlink.project.service.LinkStatsService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ import java.text.DecimalFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,8 +72,10 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
             distribution.add(queries.containsKey(h) ? queries.get(h).getCnt() : 0);
         }
 
-        // 查询高频访问IP TOP10
-        List<LinkTopIPStatsVO> topIpStats = linkAccessLogsMapper.selectTopIP(shortUri);
+        // 查询指定时间范围内高频访问IP TOP10
+        LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.MIN);
+        LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.MAX);
+        List<LinkTopIPStatsVO> topIpStats = linkAccessLogsMapper.selectTopIP(startDateTime, endDateTime, shortUri);
 
         // 一周分布：查询本周时间范围内的指定短链接每天的访问PV数
         LocalDate startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -82,10 +86,10 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
             weekdayStats.add(weekQueries.containsKey(i) ? weekQueries.get(i).getCnt(): 0);
         }
 
-        // 查询操作系统、设备类型、浏览器统计
-        List<LinkBrowserStatsVO> browserStats = linkBrowserStatsMapper.selectBrowserStats(shortUri);
-        List<LinkOsStatsVO> osStats = linkOsStatsMapper.selectOsStats(shortUri);
-        List<LinkDeviceStatsVO> deviceStats = linkDeviceStatsMapper.selectDeviceStats(shortUri);
+        // 查询操作系统、设备类型、浏览器统计，是指定时间范围内的统计
+        List<LinkBrowserStatsVO> browserStats = linkBrowserStatsMapper.selectBrowserStats(startDate, endDate, shortUri);
+        List<LinkOsStatsVO> osStats = linkOsStatsMapper.selectOsStats(startDate, endDate, shortUri);
+        List<LinkDeviceStatsVO> deviceStats = linkDeviceStatsMapper.selectDeviceStats(startDate, endDate, shortUri);
         calRatio(browserStats);
         calRatio(osStats);
         calRatio(deviceStats);
@@ -93,6 +97,10 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         // 查询地区统计数据：查询出指定时间范围内总访问量最高的前 10 个省份，占比以及次数，并按降序排序
         List<LinkLocaleStatsVO> localeStats = linkLocaleStatsMapper.selectLocaleStats(startDate, endDate, shortUri);
         calRatio(localeStats);
+
+        // 统计访客类型：新访客 or 老访客：新访客指首次访问该短链接的用户，此后访问的都是老访客
+        // 在数据展示界面中，会展示指定时间范围内该短链接的新访客数与老访客数
+
 
         return LinkStatsVO.builder()
                 .uip(uip)

@@ -16,6 +16,7 @@
         SELECT browser, SUM(cnt) as cnt
         FROM t_link_browser_stats
         WHERE short_uri = #{shortUri}
+        AND access_date BETWEEN #{startDate} AND #{endDate}
         GROUP BY browser
     </select>
 </mapper>

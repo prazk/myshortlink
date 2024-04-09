@@ -14,6 +14,7 @@
         SELECT os, SUM(cnt) as cnt
         FROM t_link_os_stats
         WHERE short_uri = #{shortUri}
+         AND access_date BETWEEN #{startDate} AND #{endDate}
         GROUP BY os
     </select>
 </mapper>

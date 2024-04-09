@@ -14,6 +14,7 @@
         SELECT ip, COUNT(*) AS cnt
         FROM t_link_access_logs
         WHERE short_uri = #{shortUri}
+        AND create_time BETWEEN #{startDateTime} AND #{endDateTime}
         GROUP BY ip
         ORDER BY cnt DESC
         LIMIT 10

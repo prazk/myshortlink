@@ -5,6 +5,7 @@ import com.prazk.myshortlink.project.pojo.entity.LinkAccessLogs;
 import com.prazk.myshortlink.project.pojo.vo.LinkTopIPStatsVO;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -16,6 +17,8 @@ import java.util.List;
 public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogs> {
     void recordAccessLogs(@Param("et") LinkAccessLogs linkAccessLogs);
 
-    List<LinkTopIPStatsVO> selectTopIP(@Param("shortUri") String shortUri);
+    List<LinkTopIPStatsVO> selectTopIP(@Param("startDateTime") LocalDateTime startDateTime,
+                                       @Param("endDateTime") LocalDateTime endDateTime,
+                                       @Param("shortUri") String shortUri);
 }
 

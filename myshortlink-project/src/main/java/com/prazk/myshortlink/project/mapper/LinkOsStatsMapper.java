@@ -5,12 +5,15 @@ import com.prazk.myshortlink.project.pojo.entity.LinkOsStats;
 import com.prazk.myshortlink.project.pojo.vo.LinkOsStatsVO;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface LinkOsStatsMapper extends BaseMapper<LinkOsStats> {
 
     void recordOsAccessStats(@Param("et") LinkOsStats osStats);
 
-    List<LinkOsStatsVO> selectOsStats(@Param("shortUri") String shortUri);
+    List<LinkOsStatsVO> selectOsStats(@Param("startDate") LocalDate startDate,
+                                      @Param("endDate") LocalDate endDate,
+                                      @Param("shortUri") String shortUri);
 }
 
