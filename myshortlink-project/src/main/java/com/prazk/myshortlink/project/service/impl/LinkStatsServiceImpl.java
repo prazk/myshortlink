@@ -60,11 +60,6 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
             }
         }
 
-        // 查询地区统计数据
-        // 查询出指定时间范围内总访问量最高的前 10 个省份，占比以及次数，并按降序排序
-        List<LinkLocaleStatsVO> localeStats = linkLocaleStatsMapper.selectLocaleStats(startDate, endDate, shortUri);
-        calRatio(localeStats);
-
         // 查询当前小时和前23小时内，该短链接的访问量分布
         Integer nowHour = LocalDateTime.now().getHour();
         LocalDate today = LocalDate.now();
@@ -94,6 +89,10 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         calRatio(browserStats);
         calRatio(osStats);
         calRatio(deviceStats);
+
+        // 查询地区统计数据：查询出指定时间范围内总访问量最高的前 10 个省份，占比以及次数，并按降序排序
+        List<LinkLocaleStatsVO> localeStats = linkLocaleStatsMapper.selectLocaleStats(startDate, endDate, shortUri);
+        calRatio(localeStats);
 
         return LinkStatsVO.builder()
                 .uip(uip)
