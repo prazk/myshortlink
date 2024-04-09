@@ -8,6 +8,7 @@ import com.prazk.myshortlink.project.mapper.LinkLocaleStatsMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
 import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery;
+import com.prazk.myshortlink.project.pojo.query.LinkWeekdayStatsQuery;
 import com.prazk.myshortlink.project.pojo.vo.LinkAccessDailyStatsVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkLocaleStatsVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkStatsVO;
@@ -17,8 +18,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.text.DecimalFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +50,7 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         int uip = 0, uv = 0, pv = 0;
         List<LinkAccessDailyStatsVO> daily = new ArrayList<>();
         for (LocalDate accessDate = startDate; !accessDate.equals(endDate.plusDays(1)); accessDate = accessDate.plusDays(1)) {
-            // select sum(pv),sum(uv),sum(uip),access_date from t_link_access_stats where short_uri = '3nlRrO' and access_date = '2024-04-07';
+            // 查询accessDate的PV、UV、IP
             LinkAccessDailyStatsVO dailyStatsVO = linkAccessStatsMapper.selectStats(shortUri, accessDate);
             if (dailyStatsVO != null) {
                 daily.add(dailyStatsVO);
@@ -80,6 +83,15 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         // 查询高频访问IP TOP10
         List<LinkTopIPStatsVO> topIpStats = linkAccessLogsMapper.selectTopIP(shortUri);
 
+        // 一周分布：查询本周时间范围内的指定短链接每天的访问PV数
+        LocalDate startOfWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        Map<Integer, LinkWeekdayStatsQuery> weekQueries = linkAccessStatsMapper.selectWeekStats(startOfWeek, endOfWeek, shortUri);
+        List<Integer> weekdayStats = new ArrayList<>(7);
+        for (int i = 1; i < 8; i++) {
+            weekdayStats.add(weekQueries.containsKey(i) ? weekQueries.get(i).getCnt(): 0);
+        }
+
         LinkStatsVO vo = LinkStatsVO.builder()
                 .uip(uip)
                 .pv(pv)
@@ -88,6 +100,7 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
                 .localeStats(localeStats)
                 .distribution(distribution)
                 .topIpStats(topIpStats)
+                .weekdayStats(weekdayStats)
                 .build();
 
         return vo;

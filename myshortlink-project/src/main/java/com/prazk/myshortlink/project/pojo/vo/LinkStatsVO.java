@@ -31,4 +31,8 @@ public class LinkStatsVO {
      * 查询高频访问IP TOP10
      */
     private List<LinkTopIPStatsVO> topIpStats;
+    /**
+     * 一周分布：查询本周时间范围内的指定短链接每天的访问PV数
+     */
+    private List<Integer> weekdayStats;
 }

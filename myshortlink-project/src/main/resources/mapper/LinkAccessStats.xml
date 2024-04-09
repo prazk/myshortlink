@@ -17,6 +17,7 @@
         select sum(pv) as pv, sum(uv) as uv, sum(uip) as uip, access_date as accessDate
         from t_link_access_stats
         where short_uri = #{shortUri} and access_date = #{accessDate}
+        group by accessDate
     </select>
 
     <select id="selectDailyDistribution" resultType="com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery">
@@ -31,4 +32,14 @@
                 (access_date = #{today})
             )
     </select>
+
+    <select id="selectWeekStats" resultType="com.prazk.myshortlink.project.pojo.query.LinkWeekdayStatsQuery">
+        SELECT SUM(pv) AS cnt, access_weekday as weekday
+        FROM t_link_access_stats
+        WHERE short_uri = #{shortUri}
+          AND access_date BETWEEN #{startOfWeek} AND #{endOfWeek}
+        GROUP BY access_weekday
+        ORDER BY access_weekday
+    </select>
+
 </mapper>
