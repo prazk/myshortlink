@@ -9,4 +9,13 @@
             t_link_access_logs (short_uri, user, browser, os, device, ip, create_time, del_flag)
         VALUES (#{et.shortUri}, #{et.user}, #{et.browser}, #{et.os}, #{et.device}, #{et.ip}, #{et.createTime}, #{et.delFlag})
     </insert>
+
+    <select id="selectTopIP" resultType="com.prazk.myshortlink.project.pojo.vo.LinkTopIPStatsVO">
+        SELECT ip, COUNT(*) AS cnt
+        FROM t_link_access_logs
+        WHERE short_uri = #{shortUri}
+        GROUP BY ip
+        ORDER BY cnt DESC
+        LIMIT 10
+    </select>
 </mapper>

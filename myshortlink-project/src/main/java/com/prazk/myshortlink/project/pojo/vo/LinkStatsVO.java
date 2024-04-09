@@ -27,4 +27,8 @@ public class LinkStatsVO {
      * 近 24小时内，该短链接的访问量分布
      */
     private List<Integer> distribution;
+    /**
+     * 查询高频访问IP TOP10
+     */
+    private List<LinkTopIPStatsVO> topIpStats;
 }

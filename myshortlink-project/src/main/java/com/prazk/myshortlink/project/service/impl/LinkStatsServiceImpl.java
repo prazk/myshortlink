@@ -2,6 +2,7 @@ package com.prazk.myshortlink.project.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
+import com.prazk.myshortlink.project.mapper.LinkAccessLogsMapper;
 import com.prazk.myshortlink.project.mapper.LinkAccessStatsMapper;
 import com.prazk.myshortlink.project.mapper.LinkLocaleStatsMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
@@ -10,6 +11,7 @@ import com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery;
 import com.prazk.myshortlink.project.pojo.vo.LinkAccessDailyStatsVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkLocaleStatsVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkStatsVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkTopIPStatsVO;
 import com.prazk.myshortlink.project.service.LinkStatsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
 
     private final LinkAccessStatsMapper linkAccessStatsMapper;
     private final LinkLocaleStatsMapper linkLocaleStatsMapper;
+    private final LinkAccessLogsMapper linkAccessLogsMapper;
 
     /**
      * 查询单个短链接的所有统计数据
@@ -74,6 +77,9 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
             distribution.add(queries.containsKey(h) ? queries.get(h).getCnt() : 0);
         }
 
+        // 查询高频访问IP TOP10
+        List<LinkTopIPStatsVO> topIpStats = linkAccessLogsMapper.selectTopIP(shortUri);
+
         LinkStatsVO vo = LinkStatsVO.builder()
                 .uip(uip)
                 .pv(pv)
@@ -81,6 +87,7 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
                 .daily(daily)
                 .localeStats(localeStats)
                 .distribution(distribution)
+                .topIpStats(topIpStats)
                 .build();
 
         return vo;
