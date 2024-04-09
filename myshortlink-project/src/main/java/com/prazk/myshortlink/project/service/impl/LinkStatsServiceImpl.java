@@ -1,10 +1,17 @@
 package com.prazk.myshortlink.project.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.prazk.myshortlink.project.common.constant.CommonConstant;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.mapper.*;
 import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkStatsLogsPageDTO;
+import com.prazk.myshortlink.project.pojo.entity.LinkAccessLogs;
 import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery;
 import com.prazk.myshortlink.project.pojo.query.LinkWeekdayStatsQuery;
@@ -107,25 +114,30 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
 
         // 1. 先查询出指定时间范围内访问了指定短链接的所有用户
         List<String> users = linkAccessLogsMapper.selectUsers(startDateTime, endDateTime, shortUri);
-
-        // 2. 判断用户是新访客还是老访客
-        Map<String, uvTypeQuery> uvQueries = linkAccessLogsMapper.selectAccessType(users, startDateTime, endDateTime, shortUri);
-        Map<String, Integer> counted = CollUtil.countMap(uvQueries.values().stream().map(uvTypeQuery::getType).toList());
-        int newCount = Optional.ofNullable(counted.get("新访客")).orElse(0);
-        int oldCount = Optional.ofNullable(counted.get("老访客")).orElse(0);
+        List<LinkUserTypeStatsVO> uvTypeStats = new ArrayList<>(2);
 
         LinkUserTypeStatsVO newUserStats = new LinkUserTypeStatsVO();
         newUserStats.setType("新访客");
-        newUserStats.setCnt(newCount);
 
         LinkUserTypeStatsVO oldUserStats = new LinkUserTypeStatsVO();
         oldUserStats.setType("老访客");
-        oldUserStats.setCnt(oldCount);
 
-        List<LinkUserTypeStatsVO> uvTypeStats = new ArrayList<>(2);
+        if (!CollUtil.isEmpty(users)) {
+            // 2. 判断用户是新访客还是老访客
+            Map<String, uvTypeQuery> uvQueries = linkAccessLogsMapper.selectAccessType(users, startDateTime, endDateTime, shortUri);
+            Map<String, Integer> counted = CollUtil.countMap(uvQueries.values().stream().map(uvTypeQuery::getType).toList());
+            int newCount = Optional.ofNullable(counted.get("新访客")).orElse(0);
+            int oldCount = Optional.ofNullable(counted.get("老访客")).orElse(0);
+
+            newUserStats.setCnt(newCount);
+            oldUserStats.setCnt(oldCount);
+        } else {
+            newUserStats.setCnt(0);
+            oldUserStats.setCnt(0);
+        }
+
         uvTypeStats.add(newUserStats);
         uvTypeStats.add(oldUserStats);
-
         calRatio(uvTypeStats);
 
         return LinkStatsVO.builder()
@@ -144,8 +156,37 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
                 .build();
     }
 
+    @Override
+    public IPage<LinkStatsLogsVO> getLogs(LinkStatsLogsPageDTO linkStatsLogsPageDTO) {
+        LocalDate startDate = linkStatsLogsPageDTO.getStartDate();
+        LocalDate endDate = linkStatsLogsPageDTO.getEndDate();
+        LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.MIN);
+        LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.MAX);
+        String shortUri = linkStatsLogsPageDTO.getShortUri();
+
+        Page<LinkAccessLogs> page = new Page<>(linkStatsLogsPageDTO.getPage(), linkStatsLogsPageDTO.getPageSize());
+        LambdaQueryWrapper<LinkAccessLogs> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(LinkAccessLogs::getShortUri, shortUri)
+                .eq(LinkAccessLogs::getDelFlag, CommonConstant.NOT_DELETED)
+                .between(LinkAccessLogs::getCreateTime, startDate, endDate);
+        linkAccessLogsMapper.selectPage(page, wrapper);
+        IPage<LinkStatsLogsVO> result = page.convert(each -> BeanUtil.toBean(each, LinkStatsLogsVO.class));
+
+        // 填充uvType
+        // 1. 先查询出指定时间范围内访问了指定短链接的所有用户
+        List<String> users = linkAccessLogsMapper.selectUsers(startDateTime, endDateTime, shortUri);
+        if (!CollUtil.isEmpty(users)) {
+            // 2. 判断用户是新访客还是老访客
+            Map<String, uvTypeQuery> uvQueries = linkAccessLogsMapper.selectAccessType(users, startDateTime, endDateTime, shortUri);
+            // 3. 填充
+            result.getRecords().forEach(e -> e.setUvType(uvQueries.get(e.getUser()).getType()));
+        }
+
+        return result;
+    }
+
     private <T extends LinkInfoStatsAbstractVO> void calRatio(List<T> t) {
-        int total = t.stream().mapToInt(T::getCnt).sum();
+        int total = t.stream().mapToInt(e -> Optional.ofNullable(e.getCnt()).orElse(0)).sum();
         if (total != 0) {
             DecimalFormat df = new DecimalFormat("#.##");
             t.forEach(vo -> vo.setRatio(Double.parseDouble(df.format((double) vo.getCnt() / total))));

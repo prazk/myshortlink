@@ -21,8 +21,6 @@ public class LinkAccessLogs {
     private Long id;
     //短链接
     private String shortUri;
-    //分组标识
-    private String gid;
     //用户信息
     private String user;
     //浏览器
