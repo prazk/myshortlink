@@ -47,4 +47,8 @@ public class LinkStatsVO {
      * 统计设备类型
      */
     private List<LinkDeviceStatsVO> deviceStats;
+    /**
+     * 查询访客类型
+     */
+    private List<LinkUserTypeStatsVO> uvTypeStats;
 }

@@ -1,5 +1,6 @@
 package com.prazk.myshortlink.project.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.mapper.*;
@@ -7,6 +8,7 @@ import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
 import com.prazk.myshortlink.project.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.pojo.query.LinkDailyDistributionQuery;
 import com.prazk.myshortlink.project.pojo.query.LinkWeekdayStatsQuery;
+import com.prazk.myshortlink.project.pojo.query.uvTypeQuery;
 import com.prazk.myshortlink.project.pojo.vo.*;
 import com.prazk.myshortlink.project.service.LinkStatsService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -98,9 +101,32 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         List<LinkLocaleStatsVO> localeStats = linkLocaleStatsMapper.selectLocaleStats(startDate, endDate, shortUri);
         calRatio(localeStats);
 
-        // 统计访客类型：新访客 or 老访客：新访客指首次访问该短链接的用户，此后访问的都是老访客
+        // 统计访客类型：新访客 or 老访客：
+        // 新访客指在选定时间范围内访问该短链接的用户；老访客指在选定时间范围前访问过该短链接的访客，且在选定时间范围内也进行了访问
         // 在数据展示界面中，会展示指定时间范围内该短链接的新访客数与老访客数
 
+        // 1. 先查询出指定时间范围内访问了指定短链接的所有用户
+        List<String> users = linkAccessLogsMapper.selectUsers(startDateTime, endDateTime, shortUri);
+
+        // 2. 判断用户是新访客还是老访客
+        Map<String, uvTypeQuery> uvQueries = linkAccessLogsMapper.selectAccessType(users, startDateTime, endDateTime, shortUri);
+        Map<String, Integer> counted = CollUtil.countMap(uvQueries.values().stream().map(uvTypeQuery::getType).toList());
+        int newCount = Optional.ofNullable(counted.get("新访客")).orElse(0);
+        int oldCount = Optional.ofNullable(counted.get("老访客")).orElse(0);
+
+        LinkUserTypeStatsVO newUserStats = new LinkUserTypeStatsVO();
+        newUserStats.setType("新访客");
+        newUserStats.setCnt(newCount);
+
+        LinkUserTypeStatsVO oldUserStats = new LinkUserTypeStatsVO();
+        oldUserStats.setType("老访客");
+        oldUserStats.setCnt(oldCount);
+
+        List<LinkUserTypeStatsVO> uvTypeStats = new ArrayList<>(2);
+        uvTypeStats.add(newUserStats);
+        uvTypeStats.add(oldUserStats);
+
+        calRatio(uvTypeStats);
 
         return LinkStatsVO.builder()
                 .uip(uip)
@@ -114,12 +140,17 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
                 .browserStats(browserStats)
                 .deviceStats(deviceStats)
                 .osStats(osStats)
+                .uvTypeStats(uvTypeStats)
                 .build();
     }
 
     private <T extends LinkInfoStatsAbstractVO> void calRatio(List<T> t) {
         int total = t.stream().mapToInt(T::getCnt).sum();
-        DecimalFormat df = new DecimalFormat("#.##");
-        t.forEach(vo -> vo.setRatio(Double.parseDouble(df.format((double) vo.getCnt() / total))));
+        if (total != 0) {
+            DecimalFormat df = new DecimalFormat("#.##");
+            t.forEach(vo -> vo.setRatio(Double.parseDouble(df.format((double) vo.getCnt() / total))));
+        } else {
+            t.forEach(vo -> vo.setRatio(0.0));
+        }
     }
 }

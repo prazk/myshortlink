@@ -19,4 +19,28 @@
         ORDER BY cnt DESC
         LIMIT 10
     </select>
+
+    <select id="selectUsers" resultType="java.lang.String">
+        SELECT DISTINCT user
+        FROM t_link_access_logs
+        WHERE short_uri = #{shortUri}
+        AND create_time BETWEEN #{startDateTime} AND #{endDateTime}
+    </select>
+
+    <select id="selectAccessType" resultType="com.prazk.myshortlink.project.pojo.query.uvTypeQuery">
+        SELECT user,
+            CASE
+                WHEN MIN(create_time) BETWEEN #{startDateTime} AND #{endDateTime} THEN '新访客'
+                ELSE '老访客'
+            END AS type
+        FROM
+            t_link_access_logs
+        WHERE
+            short_uri = #{shortUri}
+        AND user IN
+            <foreach collection="users" item="user" separator="," open="(" close=")">
+                #{user}
+            </foreach>
+        GROUP BY user
+    </select>
 </mapper>
