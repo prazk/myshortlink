@@ -9,43 +9,28 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Link {
+public class LinkStatsToday {
     //ID
     @TableId(type = IdType.AUTO)
     private Long id;
-    //域名
-    private String domain;
     //短链接
     private String shortUri;
-    //完整短链接
-    private String fullShortUri;
-    //原始链接
-    private String originUri;
-    //访问人次
-    private Integer pv;
-    //访问人数
-    private Integer uv;
-    //访问IP数
-    private Integer ip;
-    //分组标识
-    private String gid;
-    //启用标识 0：未启用 1：已启用
+    //日期
     @TableField(fill = FieldFill.INSERT)
-    private Integer enableStatus;
-    //创建类型 0：控制台 1：接口
-    private Integer createdType;
-    //有效期类型 0：永久有效 1：用户自定义
-    private Integer validDateType;
-    //有效期
-    private LocalDateTime validDate;
-    //描述
-    private String description;
+    private LocalDate accessDate;
+    //今日PV
+    private Integer todayPv;
+    //今日UV
+    private Integer todayUv;
+    //今日IP数
+    private Integer todayUip;
     //创建时间
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
@@ -56,3 +41,4 @@ public class Link {
     @TableField(fill = FieldFill.INSERT)
     private Integer delFlag;
 }
+

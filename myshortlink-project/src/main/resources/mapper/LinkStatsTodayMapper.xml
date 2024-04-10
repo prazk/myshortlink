@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.prazk.myshortlink.project.mapper.LinkStatsTodayMapper">
+
+    <insert id="recordTodayLogs">
+        INSERT INTO t_link_stats_today (short_uri, access_date, today_pv, today_uv, today_uip, create_time, update_time, del_flag)
+        VALUES (#{et.shortUri}, #{et.accessDate}, 1, 1, 1, #{et.createTime}, #{et.updateTime}, #{et.delFlag})
+        ON DUPLICATE KEY UPDATE
+            update_time = #{et.updateTime},
+            today_pv = today_pv + 1,
+            today_uv = today_uv + #{uvIncrement},
+            today_uip = today_uip + #{ipIncrement}
+    </insert>
+
+    <select id="selectTodayLogs" resultType="java.util.Map">
+        SELECT today_pv as todayPv, today_uv as todayUv, today_uip as todayUip, short_uri as shortUri
+        FROM t_link_stats_today
+        WHERE short_uri IN(
+                <foreach collection="shortUris" item="uri" separator=",">
+                    #{uri}
+                </foreach>
+            )
+          AND access_date = #{today}
+          AND del_flag = 0
+    </select>
+
+</mapper>

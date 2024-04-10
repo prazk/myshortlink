@@ -1,6 +1,7 @@
 package com.prazk.myshortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -15,12 +16,14 @@ import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
 import com.prazk.myshortlink.project.mapper.LinkMapper;
+import com.prazk.myshortlink.project.mapper.LinkStatsTodayMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
 import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
+import com.prazk.myshortlink.project.pojo.query.LinkTodayLogsQuery;
 import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
@@ -35,8 +38,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +52,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
     private final RBloomFilter<String> shortLinkGenerationBloomFilter;
     private final LinkGotoService linkGotoService;
     private final StringRedisTemplate stringRedisTemplate;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
     @Override
     @Transactional
@@ -99,7 +106,23 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
                 .eq(Link::getDelFlag, CommonConstant.NOT_DELETED);
         baseMapper.selectPage(page, wrapper);
         // 获取查询结果
-        IPage<LinkPageVO> result = page.convert(each -> BeanUtil.toBean(each, LinkPageVO.class));
+        CopyOptions copyOptions = CopyOptions.create()
+                .setFieldMapping(Map.of("pv", "pvTotal", "uv", "uvTotal", "ip", "ipTotal"));
+        IPage<LinkPageVO> result = page.convert(each -> BeanUtil.toBean(each, LinkPageVO.class, copyOptions));
+        // 封装今日查询数据
+        Set<String> shortUris = result.getRecords().stream().map(LinkPageVO::getShortUri).collect(Collectors.toSet());
+        if (!shortUris.isEmpty()) {
+            Map<String, Object> map = linkStatsTodayMapper.selectTodayLogs(shortUris, LocalDate.now());
+            // 封装今日UV PV IP
+            result.getRecords().forEach(record -> {
+                String shortUri = record.getShortUri();
+                LinkTodayLogsQuery linkTodayLogsQuery = BeanUtil.toBean(map.get(shortUri), LinkTodayLogsQuery.class);
+                record.setPvDaily(linkTodayLogsQuery.getTodayPv());
+                record.setIpDaily(linkTodayLogsQuery.getTodayUip());
+                record.setUvDaily(linkTodayLogsQuery.getTodayUv());
+            });
+        }
+
         return result;
     }
 

@@ -52,6 +52,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
+    private final LinkStatsTodayMapper linkStatsTodayMapper;
 
     @Value("${amap.region-stats.key}")
     private String amapRegionStatsKey;
@@ -165,15 +166,14 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 response.addCookie(uv);
             }
 
-            stringRedisTemplate.opsForHyperLogLog().add(uvKey, userIdentifier);
+            Long uvIncrement = stringRedisTemplate.opsForHyperLogLog().add(uvKey, userIdentifier);
             Integer uvCount = stringRedisTemplate.opsForHyperLogLog().size(uvKey).intValue();
 
             // IP统计
             String ipKey = RedisConstant.STATS_IP_KEY_PREFIX + shortUri;
             String actualIP = LinkUtil.getActualIP(request);
-            if (!"unknown".equals(actualIP)) {
-                stringRedisTemplate.opsForHyperLogLog().add(ipKey, actualIP);
-            }
+
+            Long ipIncrement = stringRedisTemplate.opsForHyperLogLog().add(ipKey, actualIP);
             Integer ipCount = stringRedisTemplate.opsForHyperLogLog().size(ipKey).intValue();
 
             // 地区统计
@@ -250,6 +250,19 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     .city(city)
                     .build();
             linkAccessLogsMapper.recordAccessLogs(linkAccessLogs);
+
+            // 记录当日访问(PV UV IP)日志
+            LinkStatsToday linkStatsToday = LinkStatsToday.builder()
+                    .shortUri(shortUri)
+                    .build();
+            linkStatsTodayMapper.recordTodayLogs(linkStatsToday, uvIncrement, ipIncrement);
+
+            // 记录总访问量
+            LambdaQueryWrapper<LinkGoto> linkGotoWrapper = new LambdaQueryWrapper<>();
+            linkGotoWrapper.eq(LinkGoto::getShortUri, shortUri);
+            LinkGoto linkGoto = getOne(linkGotoWrapper);
+            String gid = linkGoto.getGid();
+            linkMapper.recordAccessLogs(gid, shortUri, uvIncrement, ipIncrement);
         } catch (Exception ex) {
             log.info("统计数据失败", ex);
         }
