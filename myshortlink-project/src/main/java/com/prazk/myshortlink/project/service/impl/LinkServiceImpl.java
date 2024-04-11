@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -174,17 +175,20 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
     @Override
     @Transactional
     public void updateLink(LinkUpdateDTO linkUpdateDTO) {
+        String shortUri = linkUpdateDTO.getShortUri();
+        LocalDateTime validDate = linkUpdateDTO.getValidDate();
         // 查询相应短链接
         LambdaQueryWrapper<Link> wrapper = Wrappers.lambdaQuery(Link.class)
                 .eq(Link::getGid, linkUpdateDTO.getGid())
-                .eq(Link::getShortUri, linkUpdateDTO.getShortUri())
+                .eq(Link::getShortUri, shortUri)
                 .eq(Link::getDelFlag, CommonConstant.NOT_DELETED)
                 .eq(Link::getEnableStatus, CommonConstant.HAS_ENABLED);
         Link link = baseMapper.selectOne(wrapper);
         if (link == null) {
             throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
         }
-
+        // 是否修改了有效期
+        boolean changedValidDate = validDate != null && !validDate.equals(link.getValidDate());
         // 封装修改数据
         link.setGid(linkUpdateDTO.getNewGid());
         link.setDescription(linkUpdateDTO.getDescription());
@@ -193,10 +197,10 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         link.setUpdateTime(null);
         // 如果传入参数的ValidDateType是自定义有效期，则允许修改有效期
         if (linkUpdateDTO.getValidDateType().equals(ValidDateTypeEnum.CUSTOMIZED.getType())) {
-            if (linkUpdateDTO.getValidDate() == null) {
+            if (validDate == null) {
                 throw new ClientException(BaseErrorCode.LINK_VALID_DATE_ERROR);
             }
-            link.setValidDate(linkUpdateDTO.getValidDate());
+            link.setValidDate(validDate);
         } else {
             link.setValidDate(null);
         }
@@ -207,6 +211,12 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
             baseMapper.insert(link);
         } else {
             baseMapper.update(link, wrapper);
+        }
+
+        // 如果修改了有效期，则删除缓存
+        if (changedValidDate) {
+            String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
+            stringRedisTemplate.delete(key);
         }
     }
 }

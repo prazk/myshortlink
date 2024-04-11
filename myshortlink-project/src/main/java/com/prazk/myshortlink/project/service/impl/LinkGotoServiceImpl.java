@@ -141,9 +141,18 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         }
     }
 
+    /**
+     * 缓存或数据库命中时进行短链接访问统计
+     */
     private void doStatistics(HttpServletRequest request, HttpServletResponse response, String shortUri) {
         // TODO 重构，优化为异步方案
         try {
+            // 获取gid
+            LambdaQueryWrapper<LinkGoto> linkGotoWrapper = new LambdaQueryWrapper<>();
+            linkGotoWrapper.eq(LinkGoto::getShortUri, shortUri);
+            LinkGoto linkGoto = getOne(linkGotoWrapper);
+            String gid = linkGoto.getGid();
+
             // UV统计
             String uvKey = RedisConstant.STATS_UV_KEY_PREFIX + shortUri;
             Cookie[] cookies = request.getCookies();
@@ -258,10 +267,6 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             linkStatsTodayMapper.recordTodayLogs(linkStatsToday, uvIncrement, ipIncrement);
 
             // 记录总访问量
-            LambdaQueryWrapper<LinkGoto> linkGotoWrapper = new LambdaQueryWrapper<>();
-            linkGotoWrapper.eq(LinkGoto::getShortUri, shortUri);
-            LinkGoto linkGoto = getOne(linkGotoWrapper);
-            String gid = linkGoto.getGid();
             linkMapper.recordAccessLogs(gid, shortUri, uvIncrement, ipIncrement);
         } catch (Exception ex) {
             log.info("统计数据失败", ex);

@@ -73,7 +73,7 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         }
 
         // 查询当前小时和前23小时内，该短链接的访问量分布
-        Integer nowHour = LocalDateTime.now().getHour();
+        int nowHour = LocalDateTime.now().getHour();
         LocalDate today = LocalDate.now();
         List<Integer> distribution = new ArrayList<>(24);
         Map<Integer, LinkDailyDistributionQuery> queries = linkAccessStatsMapper.selectDailyDistribution(nowHour, today.minusDays(1), today, shortUri);
