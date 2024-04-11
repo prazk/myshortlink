@@ -2,21 +2,19 @@ package com.prazk.myshortlink.project.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.HttpUtil;
-import cn.hutool.http.useragent.UserAgent;
-import cn.hutool.http.useragent.UserAgentUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.project.common.constant.CommonConstant;
+import com.prazk.myshortlink.project.common.constant.RabbitMQConstant;
 import com.prazk.myshortlink.project.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
 import com.prazk.myshortlink.project.mapper.*;
 import com.prazk.myshortlink.project.pojo.dto.LinkRestoreDTO;
-import com.prazk.myshortlink.project.pojo.entity.*;
-import com.prazk.myshortlink.project.remote.resp.AmapIPLocale;
+import com.prazk.myshortlink.project.pojo.entity.Link;
+import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
+import com.prazk.myshortlink.project.pojo.mq.StatsMessage;
 import com.prazk.myshortlink.project.service.LinkGotoService;
 import com.prazk.myshortlink.project.util.LinkUtil;
 import jakarta.servlet.http.Cookie;
@@ -28,13 +26,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -46,16 +42,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final LinkMapper linkMapper;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
-    private final LinkAccessStatsMapper linkAccessStatsMapper;
-    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
-    private final LinkOsStatsMapper linkOsStatsMapper;
-    private final LinkBrowserStatsMapper linkBrowserStatsMapper;
-    private final LinkDeviceStatsMapper linkDeviceStatsMapper;
-    private final LinkAccessLogsMapper linkAccessLogsMapper;
-    private final LinkStatsTodayMapper linkStatsTodayMapper;
-
-    @Value("${amap.region-stats.key}")
-    private String amapRegionStatsKey;
+    private final RabbitTemplate rabbitTemplate;
 
     @SneakyThrows
     @Override
@@ -147,7 +134,6 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
      * 缓存或数据库命中时进行短链接访问统计
      */
     private void doStatistics(HttpServletRequest request, HttpServletResponse response, String shortUri) {
-        // TODO 重构，优化为异步方案
         try {
             // 获取gid
             LambdaQueryWrapper<LinkGoto> linkGotoWrapper = new LambdaQueryWrapper<>();
@@ -180,98 +166,20 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             Long uvIncrement = stringRedisTemplate.opsForHyperLogLog().add(uvKey, userIdentifier);
             Integer uvCount = stringRedisTemplate.opsForHyperLogLog().size(uvKey).intValue();
 
-            // IP统计
-            String ipKey = RedisConstant.STATS_IP_KEY_PREFIX + shortUri;
-            String actualIP = LinkUtil.getActualIP(request);
-
-            Long ipIncrement = stringRedisTemplate.opsForHyperLogLog().add(ipKey, actualIP);
-            Integer ipCount = stringRedisTemplate.opsForHyperLogLog().size(ipKey).intValue();
-
-            // 地区统计
-            Map<String, Object> reqParams = new HashMap<>();
-            reqParams.put("key", amapRegionStatsKey);
-            reqParams.put("ip", actualIP);
-            String respBody = HttpUtil.get("https://restapi.amap.com/v3/ip", reqParams);
-            AmapIPLocale amapIPLocale = JSONUtil.toBean(respBody, AmapIPLocale.class);
-            String city = "未知", province = "未知";
-            if (amapIPLocale.getInfocode().equals("10000")) {
-                city = amapIPLocale.getCity().equals("[]") ? "未知" : amapIPLocale.getCity();
-                String adcode = amapIPLocale.getAdcode().equals("[]") ? "未知" : amapIPLocale.getAdcode();
-                province = amapIPLocale.getProvince().equals("[]") ? "未知" : amapIPLocale.getProvince();
-
-                LinkLocaleStats localeStats = LinkLocaleStats.builder()
-                            .country("中国")
-                            .province(province)
-                            .adcode(adcode)
-                            .city(city)
-                            .shortUri(shortUri)
-                            .build();
-
-                linkLocaleStatsMapper.recordLocalAccessStats(localeStats);
-            } else {
-                log.error("调用高德开放地图IP定位接口失败，错误信息：{}", amapIPLocale.getInfo());
-            }
-
-            // 操作系统统计、浏览器统计、设备类型统计
-            String userAgent = request.getHeader("User-Agent");
-            String osName = "Unknown", browserName = "Unknown";
-            int deviceType = 0;
-            if (userAgent != null) {
-                UserAgent agent = UserAgentUtil.parse(userAgent);
-                osName = agent.getOs().getName();
-                browserName = agent.getBrowser().getName();
-                deviceType = agent.isMobile() ? 1 : 0; // 设备种类 0桌面端 1移动端
-
-                LinkOsStats osStats = LinkOsStats.builder()
-                        .os(osName)
-                        .shortUri(shortUri)
-                        .build();
-                linkOsStatsMapper.recordOsAccessStats(osStats);
-
-                LinkBrowserStats linkBrowserStats = LinkBrowserStats.builder()
-                        .browser(browserName)
-                        .shortUri(shortUri)
-                        .build();
-                linkBrowserStatsMapper.recordBrowserAccessStats(linkBrowserStats);
-
-                LinkDeviceStats linkDeviceStats = LinkDeviceStats.builder()
-                        .device(deviceType)
-                        .shortUri(shortUri)
-                        .build();
-                linkDeviceStatsMapper.recordDeviceAccessStats(linkDeviceStats);
-            }
-
-            // PV统计
-            LinkAccessStats accessStats = LinkAccessStats.builder()
-                    .shortUri(shortUri)
-                    .uv(uvCount)
-                    .uip(ipCount)
-                    .build();
-            linkAccessStatsMapper.recordBasicAccessStats(accessStats);
-
-            // 记录访问日志
-            LinkAccessLogs linkAccessLogs = LinkAccessLogs.builder()
-                    .shortUri(shortUri)
-                    .user(userIdentifier)
-                    .browser(browserName)
-                    .os(osName)
-                    .device(deviceType)
-                    .ip(actualIP)
-                    .province(province)
-                    .city(city)
-                    .build();
-            linkAccessLogsMapper.recordAccessLogs(linkAccessLogs);
-
-            // 记录当日访问(PV UV IP)日志
-            LinkStatsToday linkStatsToday = LinkStatsToday.builder()
+            // 发送异步统计数据
+            StatsMessage message = StatsMessage.builder()
+                    .uvCount(uvCount)
+                    .gid(gid)
+                    .actualIP(LinkUtil.getActualIP(request))
+                    .userIdentifier(userIdentifier)
+                    .userAgent(request.getHeader("User-Agent"))
+                    .uvIncrement(uvIncrement)
                     .shortUri(shortUri)
                     .build();
-            linkStatsTodayMapper.recordTodayLogs(linkStatsToday, uvIncrement, ipIncrement);
+            rabbitTemplate.convertAndSend(RabbitMQConstant.LINK_STATS_FANOUT_EXCHANGE, null, message);
 
-            // 记录总访问量
-            linkMapper.recordAccessLogs(gid, shortUri, uvIncrement, ipIncrement);
         } catch (Exception ex) {
-            log.info("统计数据失败", ex);
+            log.error("统计数据失败", ex);
         }
     }
 }
