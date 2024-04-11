@@ -127,6 +127,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 Duration expire = LinkUtil.getLinkExpireDuraion(ValidDateTypeEnum.fromType(link.getValidDateType()), link.getValidDate());
                 if (expire.equals(Duration.ZERO)) {
                     log.info("短链接已过期");
+                    // 为了避免缓存击穿，对于过期的情况也需要缓存空值
+                    stringRedisTemplate.opsForValue().set(key, "", RedisConstant.GOTO_SHORT_LINK_EMPTY_VALUE_DURATION);
                     throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
                 }
                 stringRedisTemplate.opsForValue().set(key, link.getOriginUri(), expire);
