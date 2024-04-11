@@ -14,4 +14,6 @@ public class LinkPageDTO {
     private Integer page;
     // 页大小
     private Integer pageSize;
+    // 排序字段
+    private String orderTag;
 }

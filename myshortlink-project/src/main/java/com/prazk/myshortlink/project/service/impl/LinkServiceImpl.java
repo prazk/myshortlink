@@ -2,6 +2,7 @@ package com.prazk.myshortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -37,6 +38,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
@@ -122,8 +124,36 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
                 record.setUvDaily(linkTodayLogsQuery.getTodayUv());
             });
         }
+        // 按orderTag排序
+        String orderTag = StrUtil.isBlank(linkPageDTO.getOrderTag()) ? "createTime" : linkPageDTO.getOrderTag();
+        List<LinkPageVO> records = result.getRecords();
+        records.sort((a, b) -> {
+            try {
+                Comparable comA = (Comparable) invokeGet(a, orderTag);
+                Comparable comB = (Comparable) invokeGet(b, orderTag);
+                return comB.compareTo(comA);
+            } catch (Exception e) {
+                log.error("分组短链接分页查询排序错误", e);
+            }
+            return 0;
+        });
 
         return result;
+    }
+
+    /**
+     * 根据属性名执行实体对象的get方法
+     */
+    private <T> Object invokeGet(T entity, String propertyName) {
+        Object ret = null;
+        try {
+            String getMethodName = "get" + propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
+            Method getMethod = entity.getClass().getMethod(getMethodName);
+            ret = getMethod.invoke(entity);
+        } catch (Exception e) {
+            log.error("分组短链接分页查询排序错误", e);
+        }
+        return ret;
     }
 
     @Override

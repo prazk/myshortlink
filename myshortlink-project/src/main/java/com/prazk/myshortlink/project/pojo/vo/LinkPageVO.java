@@ -15,8 +15,6 @@ public class LinkPageVO {
     private String shortUri;
     //原始链接
     private String originUri;
-    //点击量
-    private Integer clickNum;
     //分组标识
     private String gid;
     //单日访问人次
