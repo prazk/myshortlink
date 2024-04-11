@@ -207,9 +207,14 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
 
         if (!linkUpdateDTO.getNewGid().equals(linkUpdateDTO.getGid())) {
             // 如果修改了所属分组，则需要先删除该短连接，因为分片键是 gid
+            // 修改路由中间表
+            LinkGoto linkGoto = LinkGoto.builder().gid(linkUpdateDTO.getNewGid()).shortUri(link.getShortUri()).build();
+            linkGotoService.update(linkGoto, Wrappers.lambdaUpdate(LinkGoto.class).eq(LinkGoto::getShortUri, link.getShortUri()));
+            // 使用触发器归档删除的记录
             baseMapper.delete(wrapper);
             baseMapper.insert(link);
         } else {
+            // 没有修改GID则直接更新
             baseMapper.update(link, wrapper);
         }
 

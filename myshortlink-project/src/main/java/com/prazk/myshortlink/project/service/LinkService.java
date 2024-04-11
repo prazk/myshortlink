@@ -17,8 +17,6 @@ public interface LinkService extends IService<Link> {
 
     LinkAddVO addLink(LinkAddDTO linkAddDTO);
     IPage<LinkPageVO> page(LinkPageDTO linkPageDTO);
-
     List<LinkCountVO> listLinkCount(LinkCountDTO linkCountDTO);
-
     void updateLink(LinkUpdateDTO linkUpdateDTO);
 }
