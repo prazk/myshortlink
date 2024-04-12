@@ -4,6 +4,7 @@ import cn.hutool.http.HttpUtil;
 import cn.hutool.http.useragent.UserAgent;
 import cn.hutool.http.useragent.UserAgentUtil;
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.prazk.myshortlink.project.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.mapper.*;
 import com.prazk.myshortlink.project.pojo.entity.*;
@@ -11,7 +12,9 @@ import com.prazk.myshortlink.project.pojo.mq.StatsMessage;
 import com.prazk.myshortlink.project.remote.resp.AmapIPLocale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -35,19 +38,30 @@ public class SpringRabbitListener {
     private final LinkAccessLogsMapper linkAccessLogsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
     private final LinkMapper linkMapper;
+    private final MessageConverter messageConverter;
+    private final LinkStatsIdempotenceMapper linkStatsIdempotenceMapper;
 
     @Value("${amap.region-stats.key}")
     private String amapRegionStatsKey;
 
     @RabbitListener(queues = LINK_STATS_DIRECT_QUEUE)
-    public void doStatisticsAsyn(StatsMessage message) {
-        Integer uvCount = message.getUvCount();
-        Long uvIncrement = message.getUvIncrement();
-        String gid = message.getGid();
-        String actualIP = message.getActualIP();
-        String shortUri = message.getShortUri();
-        String userAgent = message.getUserAgent();
-        String userIdentifier = message.getUserIdentifier();
+    public void doStatisticsAsyn(Message message) {
+        String messageId = message.getMessageProperties().getMessageId();
+        // 保证业务幂等性
+        LinkStatsIdempotence linkStatsIdempotence = linkStatsIdempotenceMapper.selectOne(Wrappers.lambdaQuery(LinkStatsIdempotence.class).eq(LinkStatsIdempotence::getMessageId, messageId));
+        if (linkStatsIdempotence != null) {
+            log.info("重复消费");
+            return;
+        }
+
+        StatsMessage statsMessage = (StatsMessage) messageConverter.fromMessage(message);
+        Integer uvCount = statsMessage.getUvCount();
+        Long uvIncrement = statsMessage.getUvIncrement();
+        String gid = statsMessage.getGid();
+        String actualIP = statsMessage.getActualIP();
+        String shortUri = statsMessage.getShortUri();
+        String userAgent = statsMessage.getUserAgent();
+        String userIdentifier = statsMessage.getUserIdentifier();
 
         // IP统计
         String ipKey = RedisConstant.STATS_IP_KEY_PREFIX + shortUri;
@@ -137,5 +151,9 @@ public class SpringRabbitListener {
 
         // 记录总访问量
         linkMapper.recordAccessLogs(gid, shortUri, uvIncrement, ipIncrement);
+
+        // 消费完毕，插入数据库
+        LinkStatsIdempotence idempotence = LinkStatsIdempotence.builder().messageId(messageId).messageContent(JSONUtil.toJsonStr(statsMessage)).build();
+        linkStatsIdempotenceMapper.insert(idempotence);
     }
 }

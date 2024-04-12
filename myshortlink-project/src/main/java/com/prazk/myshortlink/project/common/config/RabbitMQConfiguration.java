@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfiguration {
     @Bean
     public MessageConverter messageConverter(){
-        return new Jackson2JsonMessageConverter();
+        Jackson2JsonMessageConverter jjmc = new Jackson2JsonMessageConverter();
+        jjmc.setCreateMessageIds(true);
+        return jjmc;
     }
 
     @Bean

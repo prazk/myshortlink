@@ -10,7 +10,8 @@ import com.prazk.myshortlink.project.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.project.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.common.enums.ValidDateTypeEnum;
-import com.prazk.myshortlink.project.mapper.*;
+import com.prazk.myshortlink.project.mapper.LinkGotoMapper;
+import com.prazk.myshortlink.project.mapper.LinkMapper;
 import com.prazk.myshortlink.project.pojo.dto.LinkRestoreDTO;
 import com.prazk.myshortlink.project.pojo.entity.Link;
 import com.prazk.myshortlink.project.pojo.entity.LinkGoto;
@@ -27,6 +28,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +45,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final RabbitTemplate rabbitTemplate;
+    private final MessageConverter messageConverter;
 
     @SneakyThrows
     @Override
@@ -167,7 +170,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
             Integer uvCount = stringRedisTemplate.opsForHyperLogLog().size(uvKey).intValue();
 
             // 发送异步统计数据
-            StatsMessage message = StatsMessage.builder()
+            StatsMessage statsMessage = StatsMessage.builder()
                     .uvCount(uvCount)
                     .gid(gid)
                     .actualIP(LinkUtil.getActualIP(request))
@@ -176,7 +179,8 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     .uvIncrement(uvIncrement)
                     .shortUri(shortUri)
                     .build();
-            rabbitTemplate.convertAndSend(RabbitMQConstant.LINK_STATS_FANOUT_EXCHANGE, null, message);
+
+            rabbitTemplate.convertAndSend(RabbitMQConstant.LINK_STATS_FANOUT_EXCHANGE, null, statsMessage);
 
         } catch (Exception ex) {
             log.error("统计数据失败", ex);
