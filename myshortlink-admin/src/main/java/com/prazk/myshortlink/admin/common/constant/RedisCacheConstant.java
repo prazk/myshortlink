@@ -5,6 +5,10 @@ package com.prazk.myshortlink.admin.common.constant;
  */
 public class RedisCacheConstant {
    /**
+    * 用户流量风控key
+    */
+   public static final String USER_FLOW_RISK_PREFIX = "short-link:user-flow-risk:";
+   /**
     * 用户注册分布式锁，key设置为username
     */
    public static final String LOCK_USER_REGISTER_PREFIX = "short-link:user-register:lock:";

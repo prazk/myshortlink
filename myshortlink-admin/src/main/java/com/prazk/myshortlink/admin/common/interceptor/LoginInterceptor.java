@@ -1,5 +1,6 @@
 package com.prazk.myshortlink.admin.common.interceptor;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.json.JSONUtil;
 import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.context.UserContext;
@@ -11,9 +12,14 @@ import com.prazk.myshortlink.admin.pojo.entity.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
+
+import java.util.List;
 
 
 /**
@@ -22,7 +28,21 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Component
 @RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {
+
     private final StringRedisTemplate stringRedisTemplate;
+    private static final DefaultRedisScript<Long> FLOW_RISK_SCRIPT;
+
+    static {
+        FLOW_RISK_SCRIPT = new DefaultRedisScript<>();
+        FLOW_RISK_SCRIPT.setLocation(new ClassPathResource("lua/user_req_risk_control.lua"));
+        FLOW_RISK_SCRIPT.setResultType(Long.class);
+    }
+
+    @Value("${admin.flow-risk.expire-seconds}")
+    private String expireSeconds;
+
+    @Value("${admin.flow-risk.req-times}")
+    private String reqTimes;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -34,8 +54,18 @@ public class LoginInterceptor implements HandlerInterceptor {
         String token = request.getHeader("token");
         String username = request.getHeader("username");
 
-        String key = RedisCacheConstant.TOKEN_USER_LOGIN_PREFIX + username;
-        String token1 = (String) stringRedisTemplate.opsForHash().get(key, "token");
+        // 流量风控
+        String riskKey = RedisCacheConstant.USER_FLOW_RISK_PREFIX + username;
+        List<String> riskKeys = ListUtil.of(riskKey);
+        Long flag = stringRedisTemplate.execute(FLOW_RISK_SCRIPT, riskKeys, reqTimes, expireSeconds);
+        assert flag != null;
+        if (flag.equals(0L)) {
+            throw new ClientException("请求过于频繁，请" + expireSeconds + "秒后再试");
+        }
+
+
+        String loginTokenKey = RedisCacheConstant.TOKEN_USER_LOGIN_PREFIX + username;
+        String token1 = (String) stringRedisTemplate.opsForHash().get(loginTokenKey, "token");
 
         // 校验登录状态
         if (token == null || !token.equals(token1)) {
