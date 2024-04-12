@@ -9,7 +9,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.prazk.myshortlink.project.annotation.DomainWhiteList;
 import com.prazk.myshortlink.project.common.config.DomainProperties;
+import com.prazk.myshortlink.project.common.config.DomainWhiteListProperties;
 import com.prazk.myshortlink.project.common.constant.CommonConstant;
 import com.prazk.myshortlink.project.common.constant.LinkConstant;
 import com.prazk.myshortlink.project.common.constant.RedisConstant;
@@ -59,6 +61,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
 
     @Override
     @Transactional
+    @DomainWhiteList(config = DomainWhiteListProperties.class)
     public LinkAddVO addLink(LinkAddDTO linkAddDTO) {
         String originUri = linkAddDTO.getOriginUri(); // https://www.baidu.com
         String domain = linkAddDTO.getDomain(); // www.baidu.com
@@ -174,6 +177,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
 
     @Override
     @Transactional
+    @DomainWhiteList(config = DomainWhiteListProperties.class)
     public void updateLink(LinkUpdateDTO linkUpdateDTO) {
         String shortUri = linkUpdateDTO.getShortUri();
         LocalDateTime validDate = linkUpdateDTO.getValidDate();
