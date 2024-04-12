@@ -9,6 +9,10 @@ public class RedisCacheConstant {
     */
    public static final String LOCK_USER_REGISTER_PREFIX = "short-link:user-register:lock:";
    /**
+    * 添加分组时，分组数量的分布式锁
+    */
+   public static final String LOCK_GROUP_COUNT_PREFIX = "short-link:group-count:lock:";
+   /**
     * 用户登录token，key设置为username
     */
    public static final String TOKEN_USER_LOGIN_PREFIX = "short-link:user-login:token:";

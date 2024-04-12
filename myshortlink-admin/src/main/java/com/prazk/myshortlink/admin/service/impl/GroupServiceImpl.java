@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.admin.common.constant.CommonConstant;
 import com.prazk.myshortlink.admin.common.constant.GroupConstant;
+import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.context.UserContext;
 import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
@@ -21,6 +22,8 @@ import com.prazk.myshortlink.admin.remote.service.ShortLinkRemoteService;
 import com.prazk.myshortlink.admin.service.GroupService;
 import com.prazk.myshortlink.admin.util.GidGenerator;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,7 @@ import static com.prazk.myshortlink.admin.common.constant.GroupConstant.GROUP_LI
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements GroupService {
 
     private final ShortLinkRemoteService shortLinkRemoteService;
+    private final RedissonClient redissonClient;
 
     @Override
     public void saveGroup(GroupCreateDTO groupCreateDTO) {
@@ -44,26 +48,37 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @Override
     public void saveGroup(String username, GroupCreateDTO groupCreateDTO) {
-        // 先查询数据库中当前用户的所有gid
-        LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Group::getUsername, username);
-        List<Group> groups = baseMapper.selectList(wrapper);
+        String key = RedisCacheConstant.LOCK_GROUP_COUNT_PREFIX + username;
+        RLock lock = redissonClient.getLock(key);
+        if (lock.tryLock()) {
+            try {
+                // 先查询数据库中当前用户的所有gid
+                LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
+                wrapper.eq(Group::getUsername, username);
+                List<Group> groups = baseMapper.selectList(wrapper);
 
-        // 分组最大 10个
-        if (groups.size() == GROUP_LIMIT)
-            throw new ClientException(BaseErrorCode.GROUP_REACH_LIMIT_ERROR);
+                // 分组最大 10个
+                if (groups.size() >= GROUP_LIMIT)
+                    throw new ClientException(BaseErrorCode.GROUP_REACH_LIMIT_ERROR);
 
-        // List<Group> ---> Set<String>
-        Set<String> gids = groups.stream().map(Group::getGid).collect(Collectors.toSet());
+                // List<Group> ---> Set<String>
+                Set<String> gids = groups.stream().map(Group::getGid).collect(Collectors.toSet());
 
-        String gid = GidGenerator.generateUniqueID(gids, GroupConstant.GID_LENGTH);
-        Group group = Group.builder()
-                .gid(gid)
-                .name(groupCreateDTO.getName())
-                .username(username)
-                .build();
-
-        baseMapper.insert(group);
+                String gid = GidGenerator.generateUniqueID(gids, GroupConstant.GID_LENGTH);
+                Group group = Group.builder()
+                        .gid(gid)
+                        .name(groupCreateDTO.getName())
+                        .username(username)
+                        .build();
+                baseMapper.insert(group);
+            } catch (Exception e) {
+                log.error("添加分组失败：", e);
+            } finally {
+                lock.unlock();
+            }
+        } else {
+            throw new ClientException(BaseErrorCode.SERVICE_BUSY_ERROR);
+        }
     }
 
     @Override
