@@ -193,6 +193,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         link.setGid(linkUpdateDTO.getNewGid());
         link.setDescription(linkUpdateDTO.getDescription());
         link.setValidDateType(linkUpdateDTO.getValidDateType());
+        link.setOriginUri(linkUpdateDTO.getOriginUri());
         // 让自动填充生效
         link.setUpdateTime(null);
         // 如果传入参数的ValidDateType是自定义有效期，则允许修改有效期
