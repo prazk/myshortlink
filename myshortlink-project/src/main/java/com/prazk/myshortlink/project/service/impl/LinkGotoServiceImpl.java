@@ -28,7 +28,6 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -45,7 +44,6 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final RabbitTemplate rabbitTemplate;
-    private final MessageConverter messageConverter;
 
     @SneakyThrows
     @Override

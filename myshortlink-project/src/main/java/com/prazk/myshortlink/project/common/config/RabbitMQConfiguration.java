@@ -2,10 +2,16 @@ package com.prazk.myshortlink.project.common.config;
 
 import com.prazk.myshortlink.project.common.constant.RabbitMQConstant;
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.rabbit.retry.MessageRecoverer;
+import org.springframework.amqp.rabbit.retry.RepublishMessageRecoverer;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import static com.prazk.myshortlink.project.common.constant.RabbitMQConstant.LINK_STATS_ERROR_ROUTING_KEY;
+
 
 @Configuration
 public class RabbitMQConfiguration {
@@ -29,6 +35,26 @@ public class RabbitMQConfiguration {
     @Bean
     public Binding bindingQueue(Queue linkStatsDirectQueue, FanoutExchange linkStatsFanoutExchange){
         return BindingBuilder.bind(linkStatsDirectQueue).to(linkStatsFanoutExchange);
+    }
+
+    @Bean
+    public DirectExchange linkStatsErrorExchange(){
+        return new DirectExchange(RabbitMQConstant.LINK_STATS_ERROR_EXCHANGE);
+    }
+
+    @Bean
+    public Queue linkStatsErrorQueue(){
+        return new Queue(RabbitMQConstant.LINK_STATS_ERROR_QUEUE, true);
+    }
+
+    @Bean
+    public Binding errorBinding(Queue linkStatsErrorQueue, DirectExchange linkStatsErrorExchange){
+        return BindingBuilder.bind(linkStatsErrorQueue).to(linkStatsErrorExchange).with(LINK_STATS_ERROR_ROUTING_KEY);
+    }
+
+    @Bean
+    public MessageRecoverer statsRepublishMessageRecoverer(RabbitTemplate rabbitTemplate){
+        return new RepublishMessageRecoverer(rabbitTemplate, RabbitMQConstant.LINK_STATS_ERROR_EXCHANGE, LINK_STATS_ERROR_ROUTING_KEY);
     }
 
 }

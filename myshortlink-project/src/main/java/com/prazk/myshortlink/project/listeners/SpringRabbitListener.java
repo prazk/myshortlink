@@ -18,6 +18,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +45,7 @@ public class SpringRabbitListener {
     @Value("${amap.region-stats.key}")
     private String amapRegionStatsKey;
 
+    @Transactional
     @RabbitListener(queues = LINK_STATS_DIRECT_QUEUE)
     public void doStatisticsAsyn(Message message) {
         String messageId = message.getMessageProperties().getMessageId();
