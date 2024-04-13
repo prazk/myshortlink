@@ -164,12 +164,12 @@ public class SpringRabbitListener {
                 // 消费完毕，插入数据库
                 LinkStatsIdempotence idempotence = LinkStatsIdempotence.builder().messageId(messageId).messageContent(JSONUtil.toJsonStr(statsMessage)).build();
                 linkStatsIdempotenceMapper.insert(idempotence);
-
             } catch (Throwable e) {
-                log.error("消费消息失败", e);
+                log.error("短链接统计业务异常");
+                throw e;
             } finally {
                 lock.unlock();
             }
-        } 
+        }
     }
 }
