@@ -181,6 +181,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
     public void updateLink(LinkUpdateDTO linkUpdateDTO) {
         String shortUri = linkUpdateDTO.getShortUri();
         LocalDateTime validDate = linkUpdateDTO.getValidDate();
+        String originUri = linkUpdateDTO.getOriginUri();
         // 查询相应短链接
         LambdaQueryWrapper<Link> wrapper = Wrappers.lambdaQuery(Link.class)
                 .eq(Link::getGid, linkUpdateDTO.getGid())
@@ -191,13 +192,15 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         if (link == null) {
             throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
         }
-        // 是否修改了有效期
+        // 是否修改了有效期 或 跳转链接
         boolean changedValidDate = validDate != null && !validDate.equals(link.getValidDate());
+        boolean changedOriginUri = originUri != null && !originUri.equals(link.getOriginUri());
+
         // 封装修改数据
         link.setGid(linkUpdateDTO.getNewGid());
         link.setDescription(linkUpdateDTO.getDescription());
         link.setValidDateType(linkUpdateDTO.getValidDateType());
-        link.setOriginUri(linkUpdateDTO.getOriginUri());
+        link.setOriginUri(originUri);
         // 让自动填充生效
         link.setUpdateTime(null);
         // 如果传入参数的ValidDateType是自定义有效期，则允许修改有效期
@@ -223,8 +226,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
             baseMapper.update(link, wrapper);
         }
 
-        // 如果修改了有效期，则删除缓存
-        if (changedValidDate) {
+        // 如果修改了有效期或跳转链接，则删除缓存
+        if (changedValidDate || changedOriginUri) {
             String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
             stringRedisTemplate.delete(key);
         }
