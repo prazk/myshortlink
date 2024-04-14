@@ -12,7 +12,8 @@
     <modules>
         <module>myshortlink-admin</module>
         <module>myshortlink-project</module>
-        <module>gateway</module>
+        <module>myshortlink-gateway</module>
+        <module>myshortlink-common</module>
     </modules>
 
     <properties>

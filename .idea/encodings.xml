@@ -5,6 +5,17 @@
     <file url="file://$PROJECT_DIR$/gateway/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/myshortlink-admin/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/myshortlink-admin/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-common/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-gateway/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-project/project-api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-project/project-api/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-project/project-biz/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-project/project-biz/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-project/project-dto/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-project/project-pojo/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/myshortlink-project/project-pojo/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/myshortlink-project/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/myshortlink-project/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />

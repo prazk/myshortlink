@@ -6,11 +6,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.constant.CommonConstant;
+import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.context.UserContext;
-import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
-import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.UserMapper;
 import com.prazk.myshortlink.admin.pojo.dto.*;
 import com.prazk.myshortlink.admin.pojo.entity.User;
@@ -18,6 +16,8 @@ import com.prazk.myshortlink.admin.pojo.vo.UserLoginVO;
 import com.prazk.myshortlink.admin.pojo.vo.UserVO;
 import com.prazk.myshortlink.admin.service.GroupService;
 import com.prazk.myshortlink.admin.service.UserService;
+import com.prazk.myshortlink.common.convention.errorcode.BaseErrorCode;
+import com.prazk.myshortlink.common.convention.exception.ClientException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
@@ -114,8 +114,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String username = userLoginDTO.getUsername();
         String key = RedisCacheConstant.TOKEN_USER_LOGIN_PREFIX + username;
         // 用户已登录
-        if (stringRedisTemplate.opsForHash().get(key, "token") != null) {
-            throw new ClientException(BaseErrorCode.USER_HAS_LOGIN);
+        String userToken = (String) stringRedisTemplate.opsForHash().get(key, "token");
+        if (userToken != null) {
+            return UserLoginVO.builder().username(username).token(userToken).build();
         }
         // 查询数据库并校验
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();

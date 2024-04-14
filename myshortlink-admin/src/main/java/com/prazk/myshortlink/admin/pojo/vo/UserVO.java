@@ -12,8 +12,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserVO {
-    //ID
-    private Long id;
     //用户名
     private String username;
     //手机号

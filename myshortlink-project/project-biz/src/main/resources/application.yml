@@ -1,0 +1,13 @@
+spring:
+  profiles:
+    active: dev
+project:
+  domain: my-link.cn
+  goto-domain:
+    white-list:
+      enabled: true
+      domains:
+        - baidu.com
+        - zhihu.com
+        - bilibili.com
+        - weibo.com

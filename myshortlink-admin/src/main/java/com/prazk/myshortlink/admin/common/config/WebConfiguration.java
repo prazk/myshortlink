@@ -15,8 +15,8 @@ public class WebConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
-                .excludePathPatterns("/api/short-link/admin/v1/user/login") // 登录接口
-                .excludePathPatterns("/api/short-link/admin/v1/user/has-username") // 用户存在
+                .excludePathPatterns("/short-link/admin/user/login") // 登录接口
+                .excludePathPatterns("/short-link/admin/user/has-username") // 用户存在
         ;
     }
 }

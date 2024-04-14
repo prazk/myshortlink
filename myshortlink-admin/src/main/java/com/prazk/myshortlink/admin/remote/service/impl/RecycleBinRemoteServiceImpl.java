@@ -4,12 +4,12 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.prazk.myshortlink.admin.common.convention.result.Result;
 import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.RecyclePageDTO;
-import com.prazk.myshortlink.admin.remote.pojo.vo.RecyclePageVO;
 import com.prazk.myshortlink.admin.remote.service.RecycleBinRemoteService;
 import com.prazk.myshortlink.admin.service.GroupService;
+import com.prazk.myshortlink.common.convention.result.Result;
+import com.prazk.myshortlink.project.pojo.dto.RecyclePageDTO;
+import com.prazk.myshortlink.project.pojo.vo.RecyclePageVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Deprecated
 @RequiredArgsConstructor
 public class RecycleBinRemoteServiceImpl implements RecycleBinRemoteService {
 

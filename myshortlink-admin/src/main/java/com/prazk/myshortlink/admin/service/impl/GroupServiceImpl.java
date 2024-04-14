@@ -8,19 +8,20 @@ import com.prazk.myshortlink.admin.common.constant.CommonConstant;
 import com.prazk.myshortlink.admin.common.constant.GroupConstant;
 import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.context.UserContext;
-import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
-import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
 import com.prazk.myshortlink.admin.mapper.GroupMapper;
 import com.prazk.myshortlink.admin.pojo.dto.GroupCreateDTO;
 import com.prazk.myshortlink.admin.pojo.dto.GroupSortDTO;
 import com.prazk.myshortlink.admin.pojo.dto.GroupUpdateDTO;
 import com.prazk.myshortlink.admin.pojo.entity.Group;
 import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkCountDTO;
-import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
-import com.prazk.myshortlink.admin.remote.service.ShortLinkRemoteService;
 import com.prazk.myshortlink.admin.service.GroupService;
 import com.prazk.myshortlink.admin.util.GidGenerator;
+import com.prazk.myshortlink.common.convention.errorcode.BaseErrorCode;
+import com.prazk.myshortlink.common.convention.exception.ClientException;
+import com.prazk.myshortlink.common.convention.result.Result;
+import com.prazk.myshortlink.project.api.client.LinkClient;
+import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
+import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -37,7 +38,7 @@ import static com.prazk.myshortlink.admin.common.constant.GroupConstant.GROUP_LI
 @RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements GroupService {
 
-    private final ShortLinkRemoteService shortLinkRemoteService;
+    private final LinkClient linkClient;
     private final RedissonClient redissonClient;
 
     @Override
@@ -71,8 +72,11 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
                         .username(username)
                         .build();
                 baseMapper.insert(group);
-            } catch (Exception e) {
+            } catch (ClientException e) {
+                throw e;
+            } catch (Throwable e) {
                 log.error("添加分组失败：", e);
+                throw new ClientException(BaseErrorCode.SERVICE_ERROR);
             } finally {
                 lock.unlock();
             }
@@ -92,17 +96,18 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         List<Group> groups = baseMapper.selectList(wrapper);
 
         // 查询每个分组下的分组数量
-        List<String> gids = groups.stream().map(Group::getGid).toList();
+        List<String> gid = groups.stream().map(Group::getGid).toList();
+        LinkCountDTO linkCountDTO = LinkCountDTO.builder().gid(gid).build();
 
         // 调用中台查询用户的所有分组的短链接数量接口
-        List<LinkCountVO> list = shortLinkRemoteService
-                .listLinkCount(new LinkCountDTO(gids)).getData().stream().toList();
+        Result<List<LinkCountVO>> listResult = linkClient.listLinkCount(BeanUtil.beanToMap(linkCountDTO));
+        List<LinkCountVO> list = listResult.getData().stream().toList();
 
         List<GroupVO> result = BeanUtil.copyToList(groups, GroupVO.class);
         result.forEach(groupVO -> {
-            String gid = groupVO.getGid();
+            String groupVOGid = groupVO.getGid();
             list.forEach(linkCountVO -> {
-                if (linkCountVO.getGid().equals(gid)) {
+                if (linkCountVO.getGid().equals(groupVOGid)) {
                     groupVO.setCount(linkCountVO.getCount());
                 }
             });

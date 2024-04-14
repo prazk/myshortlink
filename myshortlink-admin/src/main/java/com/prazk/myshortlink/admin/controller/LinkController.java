@@ -1,15 +1,16 @@
 package com.prazk.myshortlink.admin.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.prazk.myshortlink.admin.common.convention.result.Result;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkAddDTO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkCountDTO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkPageDTO;
-import com.prazk.myshortlink.admin.remote.pojo.dto.LinkUpdateDTO;
-import com.prazk.myshortlink.admin.remote.pojo.vo.LinkAddVO;
-import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
-import com.prazk.myshortlink.admin.remote.pojo.vo.LinkPageVO;
-import com.prazk.myshortlink.admin.remote.service.ShortLinkRemoteService;
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.prazk.myshortlink.common.convention.result.Result;
+import com.prazk.myshortlink.project.api.client.LinkClient;
+import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
+import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
+import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,16 +18,17 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/short-link/admin/link")
+@RequestMapping("short-link/admin/link")
 public class LinkController {
 
-    private final ShortLinkRemoteService shortLinkRemoteService;
+    private final LinkClient linkClient;
+
     /**
      * 调用中台分页查询接口
      */
     @GetMapping("/page")
-    public Result<IPage<LinkPageVO>> page(LinkPageDTO linkPageDTO) {
-        return shortLinkRemoteService.pageLink(linkPageDTO);
+    public Result<Page<LinkPageVO>> page(LinkPageDTO linkPageDTO) {
+        return linkClient.pageLink(BeanUtil.beanToMap(linkPageDTO));
     }
 
     /**
@@ -34,7 +36,7 @@ public class LinkController {
      */
     @PostMapping
     public Result<LinkAddVO> addLink(@RequestBody LinkAddDTO linkAddDTO) {
-        return shortLinkRemoteService.addLink(linkAddDTO);
+        return linkClient.addLink(linkAddDTO);
     }
 
     /**
@@ -42,7 +44,7 @@ public class LinkController {
      */
     @GetMapping("/count")
     public Result<List<LinkCountVO>> listLinkCount(LinkCountDTO linkCountDTO) {
-        return shortLinkRemoteService.listLinkCount(linkCountDTO);
+        return linkClient.listLinkCount(BeanUtil.beanToMap(linkCountDTO));
     }
 
     /**
@@ -50,6 +52,6 @@ public class LinkController {
      */
     @PutMapping
     public Result<Void> updateLink(@RequestBody LinkUpdateDTO linkUpdateDTO) {
-        return shortLinkRemoteService.updateLink(linkUpdateDTO);
+        return linkClient.updateLink(linkUpdateDTO);
     }
 }

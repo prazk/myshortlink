@@ -14,12 +14,8 @@ public interface GroupService extends IService<Group> {
 
     void saveGroup(GroupCreateDTO groupCreateDTO);
     void saveGroup(String username, GroupCreateDTO groupCreateDTO);
-
     List<GroupVO> getGroups();
-
     void updateGroup(GroupUpdateDTO groupUpdateDTO);
-
     void deleteGroup(String gid);
-
     void sortGroup(List<GroupSortDTO> list);
 }

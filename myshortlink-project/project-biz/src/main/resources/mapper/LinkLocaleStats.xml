@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.prazk.myshortlink.project.biz.mapper.LinkLocaleStatsMapper">
+
+    <insert id="recordLocalAccessStats">
+        INSERT INTO t_link_locale_stats (short_uri, access_date, cnt, province, city, adcode, country, create_time, update_time, del_flag)
+        VALUES (#{et.shortUri}, #{et.accessDate}, 1, #{et.province}, #{et.city},
+                #{et.adcode},#{et.country}, #{et.createTime}, #{et.updateTime},
+                #{et.delFlag})
+        ON DUPLICATE KEY UPDATE
+            cnt = cnt + 1, update_time = #{et.updateTime};
+    </insert>
+    <select id="selectLocaleStats" resultType="com.prazk.myshortlink.project.biz.pojo.vo.LinkLocaleStatsVO">
+        SELECT province as locale, SUM(cnt) as cnt
+        FROM t_link_locale_stats
+        WHERE short_uri = #{shortUri}
+        AND access_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY province
+        ORDER BY cnt DESC
+    </select>
+</mapper>

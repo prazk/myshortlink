@@ -1,19 +1,19 @@
 package com.prazk.myshortlink.admin.controller;
 
-import com.prazk.myshortlink.admin.common.convention.result.Result;
-import com.prazk.myshortlink.admin.common.convention.result.Results;
 import com.prazk.myshortlink.admin.pojo.dto.GroupCreateDTO;
 import com.prazk.myshortlink.admin.pojo.dto.GroupSortDTO;
 import com.prazk.myshortlink.admin.pojo.dto.GroupUpdateDTO;
 import com.prazk.myshortlink.admin.pojo.vo.GroupVO;
 import com.prazk.myshortlink.admin.service.GroupService;
+import com.prazk.myshortlink.common.convention.result.Result;
+import com.prazk.myshortlink.common.convention.result.Results;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/short-link/admin/v1/group")
+@RequestMapping("short-link/admin/group")
 @RequiredArgsConstructor
 public class GroupController {
 

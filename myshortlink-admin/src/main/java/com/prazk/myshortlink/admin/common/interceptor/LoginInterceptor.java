@@ -4,11 +4,11 @@ import cn.hutool.core.collection.ListUtil;
 import cn.hutool.json.JSONUtil;
 import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.context.UserContext;
-import com.prazk.myshortlink.admin.common.convention.errorcode.BaseErrorCode;
-import com.prazk.myshortlink.admin.common.convention.exception.ClientException;
-import com.prazk.myshortlink.admin.common.convention.result.Result;
-import com.prazk.myshortlink.admin.common.convention.result.Results;
 import com.prazk.myshortlink.admin.pojo.entity.User;
+import com.prazk.myshortlink.common.convention.errorcode.BaseErrorCode;
+import com.prazk.myshortlink.common.convention.exception.ClientException;
+import com.prazk.myshortlink.common.convention.result.Result;
+import com.prazk.myshortlink.common.convention.result.Results;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -47,7 +47,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 直接放行【用户注册接口】
-        if (request.getRequestURI().equals("/api/short-link/admin/v1/user") && request.getMethod().equals("POST")) {
+        if (request.getRequestURI().equals("/short-link/admin/user") && request.getMethod().equals("POST")) {
             return true;
         }
 

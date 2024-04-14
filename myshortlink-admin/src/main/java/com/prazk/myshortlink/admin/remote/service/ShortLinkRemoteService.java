@@ -6,11 +6,11 @@ import cn.hutool.http.Method;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.prazk.myshortlink.admin.common.convention.result.Result;
-import com.prazk.myshortlink.admin.remote.pojo.dto.*;
-import com.prazk.myshortlink.admin.remote.pojo.vo.LinkAddVO;
-import com.prazk.myshortlink.admin.remote.pojo.vo.LinkCountVO;
-import com.prazk.myshortlink.admin.remote.pojo.vo.LinkPageVO;
+import com.prazk.myshortlink.common.convention.result.Result;
+import com.prazk.myshortlink.project.pojo.dto.*;
+import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +19,7 @@ import java.util.Map;
 /**
  * 短链接远程调用服务
  */
+@Deprecated
 public interface ShortLinkRemoteService {
 
     /**

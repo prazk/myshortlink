@@ -1,8 +1,8 @@
 package com.prazk.myshortlink.admin.common.web;
 
-import com.prazk.myshortlink.admin.common.convention.exception.AbstractException;
-import com.prazk.myshortlink.admin.common.convention.result.Result;
-import com.prazk.myshortlink.admin.common.convention.result.Results;
+import com.prazk.myshortlink.common.convention.exception.AbstractException;
+import com.prazk.myshortlink.common.convention.result.Result;
+import com.prazk.myshortlink.common.convention.result.Results;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
