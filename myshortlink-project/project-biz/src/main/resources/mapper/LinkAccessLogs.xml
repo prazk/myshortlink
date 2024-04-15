@@ -30,8 +30,8 @@
     <select id="selectAccessType" resultType="com.prazk.myshortlink.project.biz.pojo.query.uvTypeQuery">
         SELECT user,
             CASE
-                WHEN MIN(create_time) BETWEEN #{startDateTime} AND #{endDateTime} THEN '新访客'
-                ELSE '老访客'
+                WHEN MIN(create_time) BETWEEN #{startDateTime} AND #{endDateTime} THEN 'newUser'
+                ELSE 'oldUser'
             END AS type
         FROM
             t_link_access_logs

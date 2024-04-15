@@ -11,6 +11,7 @@ import com.prazk.myshortlink.project.biz.mapper.*;
 import com.prazk.myshortlink.project.biz.pojo.entity.*;
 import com.prazk.myshortlink.project.biz.pojo.mq.StatsMessage;
 import com.prazk.myshortlink.project.biz.pojo.resp.AmapIPLocale;
+import com.prazk.myshortlink.project.biz.util.StatsUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -108,7 +109,7 @@ public class SpringRabbitListener {
                 int deviceType = 0;
                 if (userAgent != null) {
                     UserAgent agent = UserAgentUtil.parse(userAgent);
-                    osName = agent.getOs().getName();
+                    osName = StatsUtil.dealOsName(agent.getOs().getName());
                     browserName = agent.getBrowser().getName();
                     deviceType = agent.isMobile() ? 1 : 0; // 设备种类 0桌面端 1移动端
 

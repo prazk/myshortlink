@@ -1,5 +1,6 @@
 package com.prazk.myshortlink.project.pojo.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,10 +23,12 @@ public class LinkStatsVO {
     /**
      * 查询时间范围内的访问地区统计
      */
+    @JsonProperty("localeCnStats")
     private List<LinkLocaleStatsVO> localeStats;
     /**
      * 近 24小时内，该短链接的访问量分布
      */
+    @JsonProperty("hourStats")
     private List<Integer> distribution;
     /**
      * 查询高频访问IP TOP10

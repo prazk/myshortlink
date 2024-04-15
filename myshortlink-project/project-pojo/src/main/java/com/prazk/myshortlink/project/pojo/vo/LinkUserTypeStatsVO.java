@@ -6,5 +6,5 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class LinkUserTypeStatsVO extends LinkInfoStatsAbstractVO {
-    private String type;
+    private String uvType;
 }

@@ -2,6 +2,7 @@ package com.prazk.myshortlink.project.biz.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.LocalDateTimeUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -14,8 +15,8 @@ import com.prazk.myshortlink.project.biz.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.biz.pojo.query.LinkDailyDistributionQuery;
 import com.prazk.myshortlink.project.biz.pojo.query.LinkWeekdayStatsQuery;
 import com.prazk.myshortlink.project.biz.pojo.query.uvTypeQuery;
-import com.prazk.myshortlink.project.pojo.vo.LinkTopIPStatsVO;
 import com.prazk.myshortlink.project.biz.service.LinkStatsService;
+import com.prazk.myshortlink.project.biz.util.LinkUtil;
 import com.prazk.myshortlink.project.pojo.dto.LinkAccessStatsDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkStatsLogsPageDTO;
 import com.prazk.myshortlink.project.pojo.vo.*;
@@ -27,6 +28,7 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,15 +46,19 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkOsStatsMapper linkOsStatsMapper;
 
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     /**
      * 查询单个短链接的所有统计数据
      */
     @Override
     public LinkStatsVO getStats(LinkAccessStatsDTO linkAccessStatsDTO) {
         // 查询指定日期内总的PV、UV、IP，以及每天的PV、UV、IP
-        String shortUri = linkAccessStatsDTO.getShortUri();
-        LocalDate startDate = linkAccessStatsDTO.getStartDate();
-        LocalDate endDate = linkAccessStatsDTO.getEndDate();
+//        String shortUri = linkAccessStatsDTO.getShortUri();
+        String shortUri = LinkUtil.getShortUriByFullShortUrl(linkAccessStatsDTO.getFullShortUrl());
+
+        LocalDate startDate = LocalDateTimeUtil.parse(linkAccessStatsDTO.getStartDate(), dateTimeFormatter).toLocalDate();
+        LocalDate endDate = LocalDateTimeUtil.parse(linkAccessStatsDTO.getEndDate(), dateTimeFormatter).toLocalDate();
         if (startDate.isAfter(endDate)) {
             throw new ClientException("输入日期有误");
         }
@@ -118,17 +124,17 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
         List<LinkUserTypeStatsVO> uvTypeStats = new ArrayList<>(2);
 
         LinkUserTypeStatsVO newUserStats = new LinkUserTypeStatsVO();
-        newUserStats.setType("新访客");
+        newUserStats.setUvType("newUser");
 
         LinkUserTypeStatsVO oldUserStats = new LinkUserTypeStatsVO();
-        oldUserStats.setType("老访客");
+        oldUserStats.setUvType("oldUser");
 
         if (!CollUtil.isEmpty(users)) {
             // 2. 判断用户是新访客还是老访客
             Map<String, uvTypeQuery> uvQueries = linkAccessLogsMapper.selectAccessType(users, startDateTime, endDateTime, shortUri);
             Map<String, Integer> counted = CollUtil.countMap(uvQueries.values().stream().map(uvTypeQuery::getType).toList());
-            int newCount = Optional.ofNullable(counted.get("新访客")).orElse(0);
-            int oldCount = Optional.ofNullable(counted.get("老访客")).orElse(0);
+            int newCount = Optional.ofNullable(counted.get("newUser")).orElse(0);
+            int oldCount = Optional.ofNullable(counted.get("oldUser")).orElse(0);
 
             newUserStats.setCnt(newCount);
             oldUserStats.setCnt(oldCount);

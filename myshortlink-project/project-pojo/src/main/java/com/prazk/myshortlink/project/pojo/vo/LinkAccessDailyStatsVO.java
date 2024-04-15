@@ -1,5 +1,6 @@
 package com.prazk.myshortlink.project.pojo.vo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,5 +19,6 @@ public class LinkAccessDailyStatsVO {
     private Integer pv;
     private Integer uv;
     private Integer uip;
+    @JsonProperty("date")
     private LocalDate accessDate;
 }
