@@ -55,7 +55,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             try {
                 // 先查询数据库中当前用户的所有gid
                 LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
-                wrapper.eq(Group::getUsername, username);
+                wrapper.eq(Group::getUsername, username)
+                        .eq(Group::getDelFlag, CommonConstant.NOT_DELETED);
                 List<Group> groups = baseMapper.selectList(wrapper);
 
                 // 分组最大 10个
