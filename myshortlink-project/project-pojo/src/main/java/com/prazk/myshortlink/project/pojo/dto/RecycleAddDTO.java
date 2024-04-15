@@ -6,4 +6,5 @@ import lombok.Data;
 public class RecycleAddDTO {
     private String gid;
     private String shortUri;
+    private String fullShortUrl;
 }

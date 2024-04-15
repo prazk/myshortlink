@@ -9,6 +9,7 @@ import com.prazk.myshortlink.project.biz.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.biz.mapper.LinkMapper;
 import com.prazk.myshortlink.project.biz.pojo.entity.Link;
 import com.prazk.myshortlink.project.biz.service.RecycleBinService;
+import com.prazk.myshortlink.project.biz.util.LinkUtil;
 import com.prazk.myshortlink.project.pojo.dto.RecycleAddDTO;
 import com.prazk.myshortlink.project.pojo.dto.RecycleDeleteDTO;
 import com.prazk.myshortlink.project.pojo.dto.RecyclePageDTO;
@@ -29,7 +30,8 @@ public class RecycleBinServiceImpl implements RecycleBinService {
 
     @Override
     public void add(RecycleAddDTO recycleAddDTO) {
-        String shortUri = recycleAddDTO.getShortUri();
+//        String shortUri = recycleAddDTO.getShortUri();
+        String shortUri = LinkUtil.getShortUriByFullShortUrl(recycleAddDTO.getFullShortUrl());
         // 根据【gid】和【shortUri】更新短链接状态
         LambdaUpdateWrapper<Link> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Link::getGid, recycleAddDTO.getGid())
