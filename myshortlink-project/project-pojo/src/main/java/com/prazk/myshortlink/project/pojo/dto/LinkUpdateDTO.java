@@ -7,12 +7,14 @@ import java.time.LocalDateTime;
 
 @Data
 public class LinkUpdateDTO {
+    //完整短链接
+    private String fullShortUrl;
     //短链接
     private String shortUri;
-    //分组标识
-    private String gid;
+    //原来的分组标识
+    private String originGid;
     //修改后的分组标识
-    private String newGid;
+    private String gid;
     //原始短链接
     private String originUrl;
     //描述

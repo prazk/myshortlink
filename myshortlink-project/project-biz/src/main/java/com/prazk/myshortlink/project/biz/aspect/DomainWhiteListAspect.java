@@ -70,7 +70,7 @@ public class DomainWhiteListAspect {
         if (originUrl == null) {
             throw new ClientException("请输入跳转链接");
         }
-        String host = URLUtil.getHost(URLUtil.url(originUrl)).getHost();
+        String host = URLUtil.getHost(URLUtil.url(originUrl)).getHost().replaceFirst("^www\\.", "");
 
         // 检查请求的域名是否在白名单内
         StringBuilder sb = new StringBuilder();

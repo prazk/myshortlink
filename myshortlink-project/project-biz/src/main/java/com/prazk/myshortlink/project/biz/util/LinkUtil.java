@@ -4,19 +4,47 @@ import com.prazk.myshortlink.project.biz.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.biz.common.enums.ValidDateTypeEnum;
 import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
+@Slf4j
 public class LinkUtil {
     private static final String UNKNOWN = "Unknown";
     private static final String LOCALHOST_IP = "127.0.0.1";
     // 客户端与服务器同为一台机器，获取的 ip 有时候是 ipv6 格式
     private static final String LOCALHOST_IPV6 = "0:0:0:0:0:0:0:1";
     private static final String SEPARATOR = ",";
+
+    /**
+     * 根据链接获取网站标题
+     */
+    public static String getTitleByUrl(String url) {
+        try {
+            // 通过Jsoup获取网页文档
+            Document doc = Jsoup.connect(url).get();
+
+            return doc.title();
+
+        } catch (IOException e) {
+            log.error("获取网站标题失败");
+        }
+        return null;
+    }
+
+    /**
+     * 根据完整短链接获取短链接
+     */
+    public static String getShortUriByFullShortUrl(String fullShortUrl) {
+        return fullShortUrl.substring(fullShortUrl.lastIndexOf("/") + 1);
+    }
 
     /**
      * 计算自定义有效期短链接的redis超时时间

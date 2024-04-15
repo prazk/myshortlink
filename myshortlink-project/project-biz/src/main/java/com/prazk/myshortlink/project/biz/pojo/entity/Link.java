@@ -27,6 +27,7 @@ public class Link {
     @TableField("full_short_uri")
     private String fullShortUrl;
     //原始链接
+    @TableField("origin_uri")
     private String originUrl;
     //访问人次
     private Integer totalPv;
@@ -46,7 +47,7 @@ public class Link {
     //有效期
     private LocalDateTime validDate;
     //描述
-    @TableField(value = "description")
+    @TableField(value = "`description`")
     private String describe;
     //创建时间
     @TableField(fill = FieldFill.INSERT)

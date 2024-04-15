@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.common.convention.result.Result;
 import com.prazk.myshortlink.project.api.client.LinkClient;
 import com.prazk.myshortlink.project.pojo.dto.*;
-import com.prazk.myshortlink.project.pojo.vo.*;
+import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,5 +50,13 @@ public class LinkController {
     @PutMapping
     public Result<Void> updateLink(@RequestBody LinkUpdateDTO linkUpdateDTO) {
         return linkClient.updateLink(linkUpdateDTO);
+    }
+
+    /**
+     * 通过连接查询标题
+     */
+    @GetMapping("/title")
+    public Result<String> selectTitle(LinkTitleDTO linkTitleDTO) {
+        return linkClient.selectTitle(BeanUtil.beanToMap(linkTitleDTO));
     }
 }

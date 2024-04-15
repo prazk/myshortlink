@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.common.convention.result.Result;
 import com.prazk.myshortlink.common.convention.result.Results;
 import com.prazk.myshortlink.project.biz.service.LinkService;
-import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
+import com.prazk.myshortlink.project.pojo.dto.*;
 import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
@@ -60,7 +57,14 @@ public class LinkController {
      */
     @PutMapping
     public Result<Void> updateLink(@RequestBody LinkUpdateDTO linkUpdateDTO) {
-        linkService.updateLink(linkUpdateDTO);
-        return Results.success();
+        return Results.success(linkService.updateLink(linkUpdateDTO));
+    }
+
+    /**
+     * 根据链接查询网页标题
+     */
+    @GetMapping("/title")
+    public Result<String> getTitleByLink(LinkTitleDTO linkTitleDTO) {
+        return Results.success(linkService.getTitleByLink(linkTitleDTO));
     }
 }

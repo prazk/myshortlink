@@ -12,6 +12,14 @@
         WHERE gid = #{gid} AND short_uri = #{shortUri}
     </update>
 
+    <delete id="deleteByGidAndShortUri">
+        DELETE FROM t_link
+        WHERE gid = #{gid}
+        AND short_uri = #{shortUri}
+        AND del_flag = #{delFlag}
+        AND enable_status = #{enableStatus}
+    </delete>
+
     <!-- 分页查询短链接 -->
     <select id="pageLink" resultType="com.prazk.myshortlink.project.pojo.vo.LinkPageVO">
         SELECT t.id,
@@ -41,6 +49,28 @@
           AND t.enable_status = 1
           AND t.del_flag = 0
         ORDER BY ${orderTag} DESC
+    </select>
+
+    <select id="selectOneByGidAndShortUri" resultType="com.prazk.myshortlink.project.biz.pojo.entity.Link">
+        SELECT id,
+               domain,
+               short_uri,
+               full_short_uri AS fullShortUrl,
+               origin_uri     AS originUrl,
+               total_pv,
+               total_uv,
+               total_uip,
+               gid,
+               enable_status,
+               created_type,
+               valid_date_type,
+               valid_date,
+               `description`  AS `describe`,
+               create_time,
+               update_time,
+               del_flag
+        FROM t_link
+        WHERE (gid = #{gid} AND short_uri = #{shortUri} AND del_flag = #{delFlag} AND enable_status = #{enableStatus});
     </select>
 
 </mapper>

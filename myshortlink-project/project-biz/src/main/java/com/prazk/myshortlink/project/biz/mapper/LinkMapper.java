@@ -20,4 +20,13 @@ public interface LinkMapper extends BaseMapper<Link> {
                                @Param("gid") String gid,
                                @Param("orderTag") String orderTag);
 
+    Link selectOneByGidAndShortUri(@Param("gid") String gid,
+                                   @Param("shortUri") String shortUri,
+                                   @Param("delFlag") Integer delFlag,
+                                   @Param("enableStatus") Integer enableStatus);
+
+    void deleteByGidAndShortUri(@Param("gid") String gid,
+                                @Param("shortUri") String shortUri,
+                                @Param("delFlag") Integer delFlag,
+                                @Param("enableStatus") Integer enableStatus);
 }

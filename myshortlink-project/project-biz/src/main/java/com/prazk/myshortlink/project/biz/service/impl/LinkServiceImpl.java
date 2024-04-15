@@ -4,8 +4,8 @@ package com.prazk.myshortlink.project.biz.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -25,10 +25,7 @@ import com.prazk.myshortlink.project.biz.service.LinkGotoService;
 import com.prazk.myshortlink.project.biz.service.LinkService;
 import com.prazk.myshortlink.project.biz.util.HashUtil;
 import com.prazk.myshortlink.project.biz.util.LinkUtil;
-import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
+import com.prazk.myshortlink.project.pojo.dto.*;
 import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
 import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
@@ -81,7 +78,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         shortLinkGenerationBloomFilter.add(base62);
 
         // 布隆过滤器不存在，则数据库一定不存在，插入数据库
-        String fullShortUrl = "http://" + domainProperties.getDomain() + "/" + base62;
+        String fullShortUrl = domainProperties.getDomain() + "/" + base62;
         Link link = Link.builder()
                 .shortUri(base62)
                 .fullShortUrl(fullShortUrl)
@@ -138,17 +135,15 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
     @Override
     @Transactional
     @DomainWhiteList(config = DomainWhiteListProperties.class)
-    public void updateLink(LinkUpdateDTO linkUpdateDTO) {
-        String shortUri = linkUpdateDTO.getShortUri();
+    public Void updateLink(LinkUpdateDTO linkUpdateDTO) {
+        // String shortUri = linkUpdateDTO.getShortUri();
+        String shortUri = LinkUtil.getShortUriByFullShortUrl(linkUpdateDTO.getFullShortUrl());
         LocalDateTime validDate = linkUpdateDTO.getValidDate();
         String originUrl = linkUpdateDTO.getOriginUrl();
+        String newGid = linkUpdateDTO.getGid();
+        String originGid = linkUpdateDTO.getOriginGid();
         // 查询相应短链接
-        LambdaQueryWrapper<Link> wrapper = Wrappers.lambdaQuery(Link.class)
-                .eq(Link::getGid, linkUpdateDTO.getGid())
-                .eq(Link::getShortUri, shortUri)
-                .eq(Link::getDelFlag, CommonConstant.NOT_DELETED)
-                .eq(Link::getEnableStatus, CommonConstant.HAS_ENABLED);
-        Link link = baseMapper.selectOne(wrapper);
+        Link link = linkMapper.selectOneByGidAndShortUri(originGid, shortUri, CommonConstant.NOT_DELETED, CommonConstant.HAS_ENABLED);
         if (link == null) {
             throw new ClientException(BaseErrorCode.LINK_NOT_EXISTS_ERROR);
         }
@@ -157,12 +152,18 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         boolean changedOriginUrl = originUrl != null && !originUrl.equals(link.getOriginUrl());
 
         // 封装修改数据
-        link.setGid(linkUpdateDTO.getNewGid());
+        LambdaUpdateWrapper<Link> wrapper = Wrappers.lambdaUpdate(Link.class)
+                .eq(Link::getGid, newGid)
+                .eq(Link::getShortUri, shortUri)
+                .eq(Link::getDelFlag, CommonConstant.NOT_DELETED)
+                .eq(Link::getEnableStatus, CommonConstant.HAS_ENABLED);
+        link.setGid(newGid);
         link.setDescribe(linkUpdateDTO.getDescribe());
         link.setValidDateType(linkUpdateDTO.getValidDateType());
         link.setOriginUrl(originUrl);
-        // 让自动填充生效
-        link.setUpdateTime(null);
+        link.setUpdateTime(LocalDateTime.now());
+        // 不设置主键
+        link.setId(null);
         // 如果传入参数的ValidDateType是自定义有效期，则允许修改有效期
         if (linkUpdateDTO.getValidDateType().equals(ValidDateTypeEnum.CUSTOMIZED.getType())) {
             if (validDate == null) {
@@ -170,16 +171,18 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
             }
             link.setValidDate(validDate);
         } else {
+            // 永久有效期，设置有效期为null
             link.setValidDate(null);
+            wrapper.set(Link::getValidDate, null);
         }
 
-        if (!linkUpdateDTO.getNewGid().equals(linkUpdateDTO.getGid())) {
-            // 如果修改了所属分组，则需要先删除该短连接，因为分片键是 gid
+        if (!newGid.equals(originGid)) {
+            // 如果修改了所属分组，则需要先删除该短连接，因为分片键是 newGid
             // 修改路由中间表
-            LinkGoto linkGoto = LinkGoto.builder().gid(linkUpdateDTO.getNewGid()).shortUri(link.getShortUri()).build();
+            LinkGoto linkGoto = LinkGoto.builder().gid(newGid).shortUri(link.getShortUri()).build();
             linkGotoService.update(linkGoto, Wrappers.lambdaUpdate(LinkGoto.class).eq(LinkGoto::getShortUri, link.getShortUri()));
             // 使用触发器归档删除的记录
-            baseMapper.delete(wrapper);
+            baseMapper.deleteByGidAndShortUri(originGid, shortUri, CommonConstant.NOT_DELETED, CommonConstant.HAS_ENABLED);
             baseMapper.insert(link);
         } else {
             // 没有修改GID则直接更新
@@ -191,5 +194,11 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
             String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
             stringRedisTemplate.delete(key);
         }
+        return null;
+    }
+
+    @Override
+    public String getTitleByLink(LinkTitleDTO linkTitleDTO) {
+        return LinkUtil.getTitleByUrl(linkTitleDTO.getUrl());
     }
 }

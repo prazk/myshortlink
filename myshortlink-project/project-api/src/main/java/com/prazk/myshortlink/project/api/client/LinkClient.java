@@ -82,4 +82,10 @@ public interface LinkClient {
      */
     @GetMapping("/short-link/project/recycle-bin/page")
     Result<Page<RecyclePageVO>> pageRecycleBin(@SpringQueryMap Map<String, Object> params);
+
+    /**
+     * 根据链接查询网页标题
+     */
+    @GetMapping("/short-link/project/title")
+    Result<String> selectTitle(@SpringQueryMap Map<String, Object> params);
 }
