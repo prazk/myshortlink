@@ -1,7 +1,7 @@
 package com.prazk.myshortlink.project.biz.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.project.biz.common.constant.CommonConstant;
@@ -64,7 +64,8 @@ public class RecycleBinServiceImpl implements RecycleBinService {
 
     @Override
     public void recover(RecycleRecoverDTO recycleRecoverDTO) {
-        String shortUri = recycleRecoverDTO.getShortUri();
+//        String shortUri = recycleRecoverDTO.getShortUri();
+        String shortUri = LinkUtil.getShortUriByFullShortUrl(recycleRecoverDTO.getFullShortUrl());
 
         LambdaUpdateWrapper<Link> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Link::getGid, recycleRecoverDTO.getGid())
@@ -89,11 +90,15 @@ public class RecycleBinServiceImpl implements RecycleBinService {
             return new Page<>();
         }
 
-        LambdaQueryWrapper<Link> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(Link::getGid, gidList)
+        QueryWrapper<Link> wrapper = new QueryWrapper<>();
+        wrapper.select("id","domain","short_uri","full_short_uri AS fullShortUrl","origin_uri AS originUrl","total_pv","total_uv","total_uip","gid","enable_status","created_type","valid_date_type","valid_date","`description` AS `describe`","create_time","update_time","del_flag")
+                .lambda()
+                .in(Link::getGid, gidList)
                 .eq(Link::getDelFlag, CommonConstant.NOT_DELETED)
                 .eq(Link::getEnableStatus, CommonConstant.NOT_ENABLED);
+
         linkMapper.selectPage(page, wrapper);
+
         // 获取查询结果
         return (Page<RecyclePageVO>) page.convert(each -> BeanUtil.toBean(each, RecyclePageVO.class));
     }
