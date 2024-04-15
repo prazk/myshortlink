@@ -9,7 +9,7 @@ public class RecyclePageDTO {
     // 用户所有分组的gid
     private List<String> gid;
     // 页码
-    private Integer page;
+    private Integer current;
     // 页大小
-    private Integer pageSize;
+    private Integer size;
 }

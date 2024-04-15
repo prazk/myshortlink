@@ -17,6 +17,6 @@ public abstract class AbstractException extends RuntimeException {
         super(msg, throwable);
         this.errorCode = errorCode.code();
         // 如果传入的msg有长度，则展示msg，否则展示errorCode的msg
-        this.errorMessage = Optional.ofNullable(StringUtils.hasLength(msg) ? msg : null).orElse(errorCode.msg());
+        this.errorMessage = Optional.ofNullable(StringUtils.hasLength(msg) ? msg : null).orElse(errorCode.message());
     }
 }

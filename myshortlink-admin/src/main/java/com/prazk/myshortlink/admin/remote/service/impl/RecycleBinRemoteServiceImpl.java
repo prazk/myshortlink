@@ -35,8 +35,8 @@ public class RecycleBinRemoteServiceImpl implements RecycleBinRemoteService {
         // 2. 调用中台分页查询回收站短链接
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("gid", gidList);
-        requestMap.put("page", recyclePageDTO.getPage());
-        requestMap.put("pageSize", recyclePageDTO.getPageSize());
+        requestMap.put("page", recyclePageDTO.getCurrent());
+        requestMap.put("pageSize", recyclePageDTO.getSize());
 
         String result = HttpUtil.get("http://localhost:8089/api/short-link/project/recycle-bin/page", requestMap);
         return JSON.parseObject(result, new TypeReference<Result<IPage<RecyclePageVO>>>() {});

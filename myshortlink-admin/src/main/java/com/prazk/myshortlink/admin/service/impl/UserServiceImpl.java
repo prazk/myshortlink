@@ -113,11 +113,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public UserLoginVO login(UserLoginDTO userLoginDTO) {
         String username = userLoginDTO.getUsername();
         String key = RedisCacheConstant.TOKEN_USER_LOGIN_PREFIX + username;
-        // 用户已登录
-        String userToken = (String) stringRedisTemplate.opsForHash().get(key, "token");
-        if (userToken != null) {
-            return UserLoginVO.builder().username(username).token(userToken).build();
-        }
+
         // 查询数据库并校验
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username)

@@ -15,12 +15,12 @@ public class Result<T> implements Serializable {
     @Serial
     private static final long serialVersionUID = 5679018624309023727L;
 
-    private String msg;
+    private String message;
     private String code;
     private T data;
 
-    public Result(String msg, String code) {
-        this.msg = msg;
+    public Result(String message, String code) {
+        this.message = message;
         this.code = code;
     }
 

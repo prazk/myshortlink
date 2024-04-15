@@ -92,7 +92,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         // 查询用户名对应的分组信息
         LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Group::getUsername, username)
-                .eq(Group::getDelFlag, CommonConstant.NOT_DELETED);
+                .eq(Group::getDelFlag, CommonConstant.NOT_DELETED)
+                .orderByDesc(Group::getSortOrder);
         List<Group> groups = baseMapper.selectList(wrapper);
 
         // 查询每个分组下的分组数量

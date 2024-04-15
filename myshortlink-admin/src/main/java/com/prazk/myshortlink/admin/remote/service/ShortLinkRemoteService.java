@@ -28,8 +28,8 @@ public interface ShortLinkRemoteService {
     default Result<IPage<LinkPageVO>> pageLink(LinkPageDTO linkPageDTO) {
         Map<String, Object> requestMap = new HashMap<>();
         requestMap.put("gid", linkPageDTO.getGid());
-        requestMap.put("page", linkPageDTO.getPage());
-        requestMap.put("pageSize", linkPageDTO.getPageSize());
+        requestMap.put("page", linkPageDTO.getCurrent());
+        requestMap.put("pageSize", linkPageDTO.getSize());
         // 响应结果：JSON字符串
         String result = HttpUtil.get("http://localhost:8089/api/short-link/link/v1/link/page", requestMap);
 

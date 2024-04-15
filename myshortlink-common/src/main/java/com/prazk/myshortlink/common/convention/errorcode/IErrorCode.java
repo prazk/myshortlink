@@ -5,5 +5,5 @@ package com.prazk.myshortlink.common.convention.errorcode;
  */
 public interface IErrorCode {
     String code();
-    String msg();
+    String message();
 }

@@ -108,7 +108,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
 
     @Override
     public Page<LinkPageVO> page(LinkPageDTO linkPageDTO) {
-        Page<LinkPageVO> page = new Page<>(linkPageDTO.getPage(), linkPageDTO.getPageSize());
+        Page<LinkPageVO> page = new Page<>(linkPageDTO.getCurrent(), linkPageDTO.getSize());
         // 注意防止SQL注入
         String orderTag = orderTags.contains(linkPageDTO.getOrderTag()) ? linkPageDTO.getOrderTag() : "createTime";
 

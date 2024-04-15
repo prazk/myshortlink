@@ -12,6 +12,6 @@ public class LinkStatsLogsPageDTO {
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate endDate;
     private String shortUri;
-    private Integer page;
-    private Integer pageSize;
+    private Integer current;
+    private Integer size;
 }

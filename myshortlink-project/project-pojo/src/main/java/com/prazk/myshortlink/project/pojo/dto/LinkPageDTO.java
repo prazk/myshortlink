@@ -11,9 +11,9 @@ public class LinkPageDTO {
     // 分组id
     private String gid;
     // 页码
-    private Integer page;
+    private Integer current;
     // 页大小
-    private Integer pageSize;
+    private Integer size;
     // 排序字段
     private String orderTag;
 }

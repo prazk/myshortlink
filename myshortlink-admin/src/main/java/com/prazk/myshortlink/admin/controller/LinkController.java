@@ -4,13 +4,8 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.common.convention.result.Result;
 import com.prazk.myshortlink.project.api.client.LinkClient;
-import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
-import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
-import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
-import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
-import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
+import com.prazk.myshortlink.project.pojo.dto.*;
+import com.prazk.myshortlink.project.pojo.vo.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

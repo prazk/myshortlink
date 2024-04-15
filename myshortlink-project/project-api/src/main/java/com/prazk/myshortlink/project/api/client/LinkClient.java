@@ -1,7 +1,6 @@
 package com.prazk.myshortlink.project.api.client;
 
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.common.convention.result.Result;
 import com.prazk.myshortlink.project.api.config.DefaultFeignConfig;
@@ -52,13 +51,13 @@ public interface LinkClient {
      * 查询指定日期内总的PV、UV、IP，以及每天的PV、UV、IP
      */
     @GetMapping("/short-link/project/stats")
-    Result<LinkStatsVO> getStats(LinkAccessStatsDTO linkAccessStatsDTO);
+    Result<LinkStatsVO> getStats(@SpringQueryMap Map<String, Object> params);
 
     /**
      * 分页查询查询访问日志
      */
     @GetMapping("/short-link/project/stats/logs")
-    Result<IPage<LinkStatsLogsVO>> getLogs(LinkStatsLogsPageDTO linkStatsLogsPageDTO);
+    Result<Page<LinkStatsLogsVO>> getLogs(@SpringQueryMap Map<String, Object> params);
 
     /**
      * 将短链接放入回收站

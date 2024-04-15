@@ -6,7 +6,7 @@ package com.prazk.myshortlink.common.convention.errorcode;
 public enum BaseErrorCode implements IErrorCode {
 
 
-    SUCCESS_CODE("0000000", "success"),
+    SUCCESS_CODE("0", "success"),
     // ========== 一级宏观错误码 客户端错误 ==========
     CLIENT_ERROR("A000001", "用户端错误"),
     // ========== 二级宏观错误码 用户注册错误 ==========
@@ -38,11 +38,11 @@ public enum BaseErrorCode implements IErrorCode {
 
     private final String code;
 
-    private final String msg;
+    private final String message;
 
     BaseErrorCode(String code, String msg) {
         this.code = code;
-        this.msg = msg;
+        this.message = msg;
     }
 
     @Override
@@ -51,7 +51,7 @@ public enum BaseErrorCode implements IErrorCode {
     }
 
     @Override
-    public String msg() {
-        return msg;
+    public String message() {
+        return message;
     }
 }

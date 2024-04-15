@@ -80,7 +80,7 @@ public class RecycleBinServiceImpl implements RecycleBinService {
 
     @Override
     public Page<RecyclePageVO> page(RecyclePageDTO recyclePageDTO) {
-        Page<Link> page = new Page<>(recyclePageDTO.getPage(), recyclePageDTO.getPageSize());
+        Page<Link> page = new Page<>(recyclePageDTO.getCurrent(), recyclePageDTO.getSize());
         List<String> gidList = recyclePageDTO.getGid();
 
         if (gidList.isEmpty()) {

@@ -1,6 +1,6 @@
 package com.prazk.myshortlink.project.biz.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.common.convention.result.Result;
 import com.prazk.myshortlink.common.convention.result.Results;
 import com.prazk.myshortlink.project.biz.pojo.vo.LinkStatsLogsVO;
@@ -33,8 +33,8 @@ public class LinkStatsController {
      * 分页查询查询访问日志
      */
     @GetMapping("/logs")
-    public Result<IPage<LinkStatsLogsVO>> getLogs(LinkStatsLogsPageDTO linkStatsLogsPageDTO) {
-        IPage<LinkStatsLogsVO> result = linkStatsService.getLogs(linkStatsLogsPageDTO);
+    public Result<Page<LinkStatsLogsVO>> getLogs(LinkStatsLogsPageDTO linkStatsLogsPageDTO) {
+        Page<LinkStatsLogsVO> result = linkStatsService.getLogs(linkStatsLogsPageDTO);
         return Results.success(result);
     }
 }

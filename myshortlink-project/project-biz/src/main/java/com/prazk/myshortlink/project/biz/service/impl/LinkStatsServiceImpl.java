@@ -157,14 +157,14 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
     }
 
     @Override
-    public IPage<LinkStatsLogsVO> getLogs(LinkStatsLogsPageDTO linkStatsLogsPageDTO) {
+    public Page<LinkStatsLogsVO> getLogs(LinkStatsLogsPageDTO linkStatsLogsPageDTO) {
         LocalDate startDate = linkStatsLogsPageDTO.getStartDate();
         LocalDate endDate = linkStatsLogsPageDTO.getEndDate();
         LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.MIN);
         LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.MAX);
         String shortUri = linkStatsLogsPageDTO.getShortUri();
 
-        Page<LinkAccessLogs> page = new Page<>(linkStatsLogsPageDTO.getPage(), linkStatsLogsPageDTO.getPageSize());
+        Page<LinkAccessLogs> page = new Page<>(linkStatsLogsPageDTO.getCurrent(), linkStatsLogsPageDTO.getSize());
         LambdaQueryWrapper<LinkAccessLogs> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(LinkAccessLogs::getShortUri, shortUri)
                 .eq(LinkAccessLogs::getDelFlag, CommonConstant.NOT_DELETED)
@@ -182,7 +182,7 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
             result.getRecords().forEach(e -> e.setUvType(uvQueries.get(e.getUser()).getType()));
         }
 
-        return result;
+        return (Page<LinkStatsLogsVO>) result;
     }
 
     private <T extends LinkInfoStatsAbstractVO> void calRatio(List<T> t) {

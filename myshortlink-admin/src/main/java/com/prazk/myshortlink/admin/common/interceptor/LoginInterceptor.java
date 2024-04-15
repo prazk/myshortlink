@@ -12,6 +12,7 @@ import com.prazk.myshortlink.common.convention.result.Results;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -26,6 +27,7 @@ import java.util.List;
  * 登录拦截校验
  */
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {
 
@@ -46,6 +48,8 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
+        log.info(request.getRequestURI());
         // 直接放行【用户注册接口】
         if (request.getRequestURI().equals("/short-link/admin/user") && request.getMethod().equals("POST")) {
             return true;
