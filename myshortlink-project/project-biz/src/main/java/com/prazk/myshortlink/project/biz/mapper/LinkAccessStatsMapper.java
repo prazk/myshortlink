@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.prazk.myshortlink.project.biz.pojo.entity.LinkAccessStats;
 import com.prazk.myshortlink.project.biz.pojo.query.LinkDailyDistributionQuery;
 import com.prazk.myshortlink.project.biz.pojo.query.LinkWeekdayStatsQuery;
-import com.prazk.myshortlink.project.biz.pojo.vo.LinkAccessDailyStatsVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkAccessDailyStatsVO;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
 

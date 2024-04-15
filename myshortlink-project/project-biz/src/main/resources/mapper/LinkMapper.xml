@@ -13,7 +13,7 @@
     </update>
 
     <!-- 分页查询短链接 -->
-    <select id="pageLink" resultType="com.prazk.myshortlink.project.biz.pojo.vo.LinkPageVO">
+    <select id="pageLink" resultType="com.prazk.myshortlink.project.pojo.vo.LinkPageVO">
         SELECT t.id,
                t.domain,
                t.short_uri,

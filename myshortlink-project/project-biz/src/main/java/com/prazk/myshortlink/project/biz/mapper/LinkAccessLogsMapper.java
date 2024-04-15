@@ -3,7 +3,7 @@ package com.prazk.myshortlink.project.biz.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.prazk.myshortlink.project.biz.pojo.entity.LinkAccessLogs;
 import com.prazk.myshortlink.project.biz.pojo.query.uvTypeQuery;
-import com.prazk.myshortlink.project.biz.pojo.vo.LinkTopIPStatsVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkTopIPStatsVO;
 import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
 

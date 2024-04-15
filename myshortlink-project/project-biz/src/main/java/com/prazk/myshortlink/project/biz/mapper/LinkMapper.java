@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.project.biz.pojo.entity.Link;
-import com.prazk.myshortlink.project.biz.pojo.vo.LinkPageVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;

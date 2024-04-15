@@ -3,14 +3,14 @@ package com.prazk.myshortlink.project.biz.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.prazk.myshortlink.common.convention.result.Result;
 import com.prazk.myshortlink.common.convention.result.Results;
-import com.prazk.myshortlink.project.biz.pojo.vo.LinkAddVO;
-import com.prazk.myshortlink.project.biz.pojo.vo.LinkCountVO;
-import com.prazk.myshortlink.project.biz.pojo.vo.LinkPageVO;
 import com.prazk.myshortlink.project.biz.service.LinkService;
 import com.prazk.myshortlink.project.pojo.dto.LinkAddDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkCountDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkPageDTO;
 import com.prazk.myshortlink.project.pojo.dto.LinkUpdateDTO;
+import com.prazk.myshortlink.project.pojo.vo.LinkAddVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkCountVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkPageVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

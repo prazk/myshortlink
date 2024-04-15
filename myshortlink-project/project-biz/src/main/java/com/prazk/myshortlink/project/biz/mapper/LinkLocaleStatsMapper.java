@@ -2,7 +2,7 @@ package com.prazk.myshortlink.project.biz.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.prazk.myshortlink.project.biz.pojo.entity.LinkLocaleStats;
-import com.prazk.myshortlink.project.biz.pojo.vo.LinkLocaleStatsVO;
+import com.prazk.myshortlink.project.pojo.vo.LinkLocaleStatsVO;
 import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;

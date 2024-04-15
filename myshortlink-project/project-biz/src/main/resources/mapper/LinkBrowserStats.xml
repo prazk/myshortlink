@@ -12,7 +12,7 @@
     </insert>
 
     <select id="selectBrowserStats"
-            resultType="com.prazk.myshortlink.project.biz.pojo.vo.LinkBrowserStatsVO">
+            resultType="com.prazk.myshortlink.project.pojo.vo.LinkBrowserStatsVO">
         SELECT browser, SUM(cnt) as cnt
         FROM t_link_browser_stats
         WHERE short_uri = #{shortUri}
