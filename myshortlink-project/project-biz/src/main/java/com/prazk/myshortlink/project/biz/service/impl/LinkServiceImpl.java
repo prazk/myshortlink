@@ -158,7 +158,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
 
         // 封装修改数据
         link.setGid(linkUpdateDTO.getNewGid());
-        link.setDescription(linkUpdateDTO.getDescription());
+        link.setDescribe(linkUpdateDTO.getDescribe());
         link.setValidDateType(linkUpdateDTO.getValidDateType());
         link.setOriginUri(originUri);
         // 让自动填充生效

@@ -16,7 +16,7 @@ public class LinkUpdateDTO {
     //原始短链接
     private String originUri;
     //描述
-    private String description;
+    private String describe;
     //有效期
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime validDate;

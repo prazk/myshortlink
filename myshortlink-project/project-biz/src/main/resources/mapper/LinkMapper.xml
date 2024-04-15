@@ -27,7 +27,7 @@
                t.created_type,
                t.valid_date_type,
                t.valid_date,
-               t.description,
+               t.description as `describe`,
                t.create_time,
                t.update_time,
                t.del_flag,

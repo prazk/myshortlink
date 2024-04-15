@@ -45,7 +45,8 @@ public class Link {
     //有效期
     private LocalDateTime validDate;
     //描述
-    private String description;
+    @TableField(value = "description")
+    private String describe;
     //创建时间
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
