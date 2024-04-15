@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 @Data
 public class RecyclePageVO {
     //完整短链接
-    private String fullShortUri;
+    private String fullShortUrl;
     //原始链接
-    private String originUri;
+    private String originUrl;
     //点击量
     private Integer clickNum;
     //分组标识

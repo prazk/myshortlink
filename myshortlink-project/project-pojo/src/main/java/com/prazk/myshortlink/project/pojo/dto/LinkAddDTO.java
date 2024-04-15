@@ -10,7 +10,7 @@ public class LinkAddDTO {
     //域名
     private String domain;
     //原始链接
-    private String originUri;
+    private String originUrl;
     //分组标识
     private String gid;
     //创建类型 0：控制台 1：接口

@@ -65,12 +65,12 @@ public class DomainWhiteListAspect {
 
         // 获取请求的域名
         Object firstArg = joinPoint.getArgs()[0];
-        Method getMethod = firstArg.getClass().getMethod("getOriginUri");
-        String originUri = (String) getMethod.invoke(firstArg);
-        if (originUri == null) {
+        Method getMethod = firstArg.getClass().getMethod("getOriginUrl");
+        String originUrl = (String) getMethod.invoke(firstArg);
+        if (originUrl == null) {
             throw new ClientException("请输入跳转链接");
         }
-        String host = URLUtil.getHost(URLUtil.url(originUri)).getHost();
+        String host = URLUtil.getHost(URLUtil.url(originUrl)).getHost();
 
         // 检查请求的域名是否在白名单内
         StringBuilder sb = new StringBuilder();

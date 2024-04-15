@@ -61,16 +61,16 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         // 但是对于大量请求，使用不同的且不存在于数据库的key进行访问，会缓存大量的空值数据
         // 查询Redis缓存：key【短链接】，value【原始链接】
         String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
-        String originUri = stringRedisTemplate.opsForValue().get(key);
-        if (!StrUtil.isBlank(originUri)) { // 不为null且不为空
+        String originUrl = stringRedisTemplate.opsForValue().get(key);
+        if (!StrUtil.isBlank(originUrl)) { // 不为null且不为空
             log.info("缓存命中");
             // 统计访问数据
             doStatistics(request, response, shortUri);
             // 重定向结果
-            response.sendRedirect(originUri);
+            response.sendRedirect(originUrl);
             return;
         }
-        if ("".equals(originUri)) {
+        if ("".equals(originUrl)) {
             log.info("查询到空数据");
             response.sendRedirect("/link/notfound");
             return;
@@ -119,10 +119,10 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                     stringRedisTemplate.opsForValue().set(key, "", RedisConstant.GOTO_SHORT_LINK_EMPTY_VALUE_DURATION);
                     throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
                 }
-                stringRedisTemplate.opsForValue().set(key, link.getOriginUri(), expire);
+                stringRedisTemplate.opsForValue().set(key, link.getOriginUrl(), expire);
                 // 统计访问数据
                 doStatistics(request, response, shortUri);
-                response.sendRedirect(link.getOriginUri());
+                response.sendRedirect(link.getOriginUrl());
             } finally {
                 lock.unlock();
             }

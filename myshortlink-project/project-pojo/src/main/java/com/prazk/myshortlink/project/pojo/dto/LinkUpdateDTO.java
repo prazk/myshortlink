@@ -14,7 +14,7 @@ public class LinkUpdateDTO {
     //修改后的分组标识
     private String newGid;
     //原始短链接
-    private String originUri;
+    private String originUrl;
     //描述
     private String describe;
     //有效期

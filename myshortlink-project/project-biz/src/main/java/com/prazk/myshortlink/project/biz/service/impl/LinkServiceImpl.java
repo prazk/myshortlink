@@ -65,8 +65,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
     @Transactional
     @DomainWhiteList(config = DomainWhiteListProperties.class)
     public LinkAddVO addLink(LinkAddDTO linkAddDTO) {
-        String originUri = linkAddDTO.getOriginUri(); // https://www.baidu.com
-        StringBuilder uriBuilder = new StringBuilder(originUri);
+        String originUrl = linkAddDTO.getOriginUrl(); // https://www.baidu.com
+        StringBuilder uriBuilder = new StringBuilder(originUrl);
 
         String base62;
         int retryCnt = LinkConstant.RETRY_TIMES;
@@ -81,10 +81,10 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         shortLinkGenerationBloomFilter.add(base62);
 
         // 布隆过滤器不存在，则数据库一定不存在，插入数据库
-        String fullShortUri = "http://" + domainProperties.getDomain() + "/" + base62;
+        String fullShortUrl = "http://" + domainProperties.getDomain() + "/" + base62;
         Link link = Link.builder()
                 .shortUri(base62)
-                .fullShortUri(fullShortUri)
+                .fullShortUrl(fullShortUrl)
                 .build();
         BeanUtil.copyProperties(linkAddDTO, link);
         baseMapper.insert(link);
@@ -101,7 +101,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         if (Duration.ZERO.equals(expire)) {
             throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
         }
-        stringRedisTemplate.opsForValue().set(key, link.getOriginUri(), expire);
+        stringRedisTemplate.opsForValue().set(key, link.getOriginUrl(), expire);
         return linkAddVO;
     }
 
@@ -141,7 +141,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
     public void updateLink(LinkUpdateDTO linkUpdateDTO) {
         String shortUri = linkUpdateDTO.getShortUri();
         LocalDateTime validDate = linkUpdateDTO.getValidDate();
-        String originUri = linkUpdateDTO.getOriginUri();
+        String originUrl = linkUpdateDTO.getOriginUrl();
         // 查询相应短链接
         LambdaQueryWrapper<Link> wrapper = Wrappers.lambdaQuery(Link.class)
                 .eq(Link::getGid, linkUpdateDTO.getGid())
@@ -154,13 +154,13 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         }
         // 是否修改了有效期 或 跳转链接
         boolean changedValidDate = validDate != null && !validDate.equals(link.getValidDate());
-        boolean changedOriginUri = originUri != null && !originUri.equals(link.getOriginUri());
+        boolean changedOriginUrl = originUrl != null && !originUrl.equals(link.getOriginUrl());
 
         // 封装修改数据
         link.setGid(linkUpdateDTO.getNewGid());
         link.setDescribe(linkUpdateDTO.getDescribe());
         link.setValidDateType(linkUpdateDTO.getValidDateType());
-        link.setOriginUri(originUri);
+        link.setOriginUrl(originUrl);
         // 让自动填充生效
         link.setUpdateTime(null);
         // 如果传入参数的ValidDateType是自定义有效期，则允许修改有效期
@@ -187,7 +187,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         }
 
         // 如果修改了有效期或跳转链接，则删除缓存
-        if (changedValidDate || changedOriginUri) {
+        if (changedValidDate || changedOriginUrl) {
             String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
             stringRedisTemplate.delete(key);
         }

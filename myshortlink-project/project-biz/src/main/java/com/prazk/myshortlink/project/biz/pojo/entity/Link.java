@@ -24,9 +24,10 @@ public class Link {
     //短链接
     private String shortUri;
     //完整短链接
-    private String fullShortUri;
+    @TableField("full_short_uri")
+    private String fullShortUrl;
     //原始链接
-    private String originUri;
+    private String originUrl;
     //访问人次
     private Integer totalPv;
     //访问人数
