@@ -18,17 +18,17 @@ public class LinkPageVO {
     //分组标识
     private String gid;
     //单日访问人次
-    private Integer pvDaily;
+    private Integer todayPv;
     //单日访问人数
-    private Integer uvDaily;
+    private Integer todayUv;
     //单日访问IP数
-    private Integer ipDaily;
+    private Integer todayUip;
     //总访问人次
-    private Integer pvTotal;
+    private Integer totalPv;
     //总访问人数
-    private Integer uvTotal;
+    private Integer totalUv;
     //总访问IP数
-    private Integer ipTotal;
+    private Integer totalUip;
     //启用标识 0：未启用 1：已启用
     private Integer createdType;
     //有效期类型 0：永久有效 1：用户自定义

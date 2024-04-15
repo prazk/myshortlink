@@ -17,7 +17,7 @@ public class GroupVO {
     //分组名称
     private String name;
     // 当前分组下的短链接数量
-    private Integer count = 0;
+    private Integer shortLinkCount = 0;
     // 自定义排序
     @TableField(fill = FieldFill.INSERT)
     private Integer sortOrder;

@@ -109,7 +109,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             String groupVOGid = groupVO.getGid();
             list.forEach(linkCountVO -> {
                 if (linkCountVO.getGid().equals(groupVOGid)) {
-                    groupVO.setCount(linkCountVO.getCount());
+                    groupVO.setShortLinkCount(linkCountVO.getCount());
                 }
             });
         });
