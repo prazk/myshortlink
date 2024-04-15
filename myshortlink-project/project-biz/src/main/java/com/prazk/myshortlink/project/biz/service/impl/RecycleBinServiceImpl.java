@@ -49,7 +49,8 @@ public class RecycleBinServiceImpl implements RecycleBinService {
 
     @Override
     public void delete(RecycleDeleteDTO recycleDeleteDTO) {
-        String shortUri = recycleDeleteDTO.getShortUri();
+//        String shortUri = recycleDeleteDTO.getShortUri();
+        String shortUri = LinkUtil.getShortUriByFullShortUrl(recycleDeleteDTO.getFullShortUrl());
         // 根据【gid】和【shortUri】删除短链接
         LambdaUpdateWrapper<Link> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(Link::getGid, recycleDeleteDTO.getGid())
