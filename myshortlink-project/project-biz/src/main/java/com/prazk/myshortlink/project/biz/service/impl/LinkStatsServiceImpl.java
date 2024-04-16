@@ -165,17 +165,17 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
 
     @Override
     public Page<LinkStatsLogsVO> getLogs(LinkStatsLogsPageDTO linkStatsLogsPageDTO) {
-        LocalDate startDate = linkStatsLogsPageDTO.getStartDate();
-        LocalDate endDate = linkStatsLogsPageDTO.getEndDate();
-        LocalDateTime startDateTime = LocalDateTime.of(startDate, LocalTime.MIN);
-        LocalDateTime endDateTime = LocalDateTime.of(endDate, LocalTime.MAX);
-        String shortUri = linkStatsLogsPageDTO.getShortUri();
+        LocalDateTime startDateTime = LocalDateTimeUtil.parse(linkStatsLogsPageDTO.getStartDate(), dateTimeFormatter);
+        LocalDateTime endDateTime = LocalDateTimeUtil.parse(linkStatsLogsPageDTO.getEndDate(), dateTimeFormatter);
+
+//        String shortUri = linkStatsLogsPageDTO.getShortUri();
+        String shortUri = LinkUtil.getShortUriByFullShortUrl(linkStatsLogsPageDTO.getFullShortUrl());
 
         Page<LinkAccessLogs> page = new Page<>(linkStatsLogsPageDTO.getCurrent(), linkStatsLogsPageDTO.getSize());
         LambdaQueryWrapper<LinkAccessLogs> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(LinkAccessLogs::getShortUri, shortUri)
                 .eq(LinkAccessLogs::getDelFlag, CommonConstant.NOT_DELETED)
-                .between(LinkAccessLogs::getCreateTime, startDate, endDate);
+                .between(LinkAccessLogs::getCreateTime, startDateTime, endDateTime);
         linkAccessLogsMapper.selectPage(page, wrapper);
         IPage<LinkStatsLogsVO> result = page.convert(each -> BeanUtil.toBean(each, LinkStatsLogsVO.class));
 
@@ -186,8 +186,17 @@ public class LinkStatsServiceImpl extends ServiceImpl<LinkAccessStatsMapper, Lin
             // 2. 判断用户是新访客还是老访客
             Map<String, uvTypeQuery> uvQueries = linkAccessLogsMapper.selectAccessType(users, startDateTime, endDateTime, shortUri);
             // 3. 填充
-            result.getRecords().forEach(e -> e.setUvType(uvQueries.get(e.getUser()).getType()));
+            result.getRecords().forEach(e -> {
+                String type = uvQueries.get(e.getUser()).getType();
+                e.setUvType(type.equals("newUser") ? "新访客" : "老访客");
+            });
         }
+
+        // 填充locale
+        result.getRecords().forEach(e -> {
+            String locale = e.getProvince() + "-" + e.getCity();
+            e.setLocale(locale);
+        });
 
         return (Page<LinkStatsLogsVO>) result;
     }
