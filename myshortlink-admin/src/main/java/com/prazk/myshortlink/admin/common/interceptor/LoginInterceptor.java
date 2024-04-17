@@ -2,9 +2,9 @@ package com.prazk.myshortlink.admin.common.interceptor;
 
 import cn.hutool.core.collection.ListUtil;
 import cn.hutool.json.JSONUtil;
-import com.prazk.myshortlink.admin.common.constant.RedisCacheConstant;
 import com.prazk.myshortlink.admin.common.context.UserContext;
 import com.prazk.myshortlink.admin.pojo.entity.User;
+import com.prazk.myshortlink.common.convention.constant.RedisCacheConstant;
 import com.prazk.myshortlink.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.common.convention.exception.ClientException;
 import com.prazk.myshortlink.common.convention.result.Result;
@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.List;
@@ -26,7 +25,7 @@ import java.util.List;
 /**
  * 登录拦截校验
  */
-@Component
+//@Component
 @Slf4j
 @RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {
@@ -49,7 +48,7 @@ public class LoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 
-        log.info(request.getRequestURI());
+//        log.info(request.getRequestURI());
         // 直接放行【用户注册接口】
         if (request.getRequestURI().equals("/short-link/admin/user") && request.getMethod().equals("POST")) {
             return true;

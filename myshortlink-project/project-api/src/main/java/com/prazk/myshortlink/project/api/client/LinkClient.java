@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * 远程调用短链接接口Feign客户端
  */
-@FeignClient(value = "link-service", configuration = DefaultFeignConfig.class)
+@FeignClient(value = "short-link-project", configuration = DefaultFeignConfig.class)
 public interface LinkClient {
     /**
      * 创建短链接

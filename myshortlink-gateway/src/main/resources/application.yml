@@ -1,0 +1,8 @@
+spring:
+  profiles:
+    active: dev
+
+gateway:
+  flow-risk:
+    expire-seconds: 30
+    req-times: 50
