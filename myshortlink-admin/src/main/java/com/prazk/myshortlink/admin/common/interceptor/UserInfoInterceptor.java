@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -17,6 +18,7 @@ import static com.prazk.myshortlink.common.convention.constant.HttpHeadersConsta
  */
 @Slf4j
 @Component
+@ConditionalOnProperty(name = "short-link.admin.enable-gateway", havingValue = "true")
 @RequiredArgsConstructor
 public class UserInfoInterceptor implements HandlerInterceptor {
     @Override
@@ -24,7 +26,7 @@ public class UserInfoInterceptor implements HandlerInterceptor {
         String username = request.getHeader(USER_INFO_HEADER);
         if (StrUtil.isNotBlank(username)) {
             UserContext.setUser(User.builder().username(username).build());
-            log.info("userInfo = {}", UserContext.getUser());
+//            log.info("userInfo = {}", UserContext.getUser());
         }
         return true;
     }

@@ -14,9 +14,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.List;
@@ -25,8 +27,9 @@ import java.util.List;
 /**
  * 登录拦截校验
  */
-//@Component
 @Slf4j
+@Component
+@ConditionalOnProperty(name = "short-link.admin.enable-gateway", havingValue = "false")
 @RequiredArgsConstructor
 public class LoginInterceptor implements HandlerInterceptor {
 
