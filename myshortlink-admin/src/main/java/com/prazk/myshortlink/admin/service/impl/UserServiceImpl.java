@@ -123,9 +123,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         // TODO 分开校验用户名和密码
         if (cnt == 0)
-            throw new ClientException(BaseErrorCode.USER_NOT_EXIST_ERROR);
+            throw new ClientException(BaseErrorCode.USER_OR_PASSWORD_ERROR);
 
-        // 校验通过，则生成 token，返回给前端，并保存到 Redis
+        // 校验通过
+        // 如果已存在token，则不生成新的token，刷新有效期
+        if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(key))) {
+            stringRedisTemplate.expire(key, RedisCacheConstant.DURATION_USER_LOGIN, TimeUnit.MINUTES);
+            String token = (String) stringRedisTemplate.opsForHash().get(key, "token");
+            return UserLoginVO.builder().token(token).username(username).build();
+        }
+        // 如果不存在token，则生成 token，返回给前端，并保存到 Redis
         String token = UUID.fastUUID().toString(true);
 
         // 保存到 Redis

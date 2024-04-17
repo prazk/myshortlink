@@ -17,6 +17,7 @@ public enum BaseErrorCode implements IErrorCode {
     USER_NAME_VERIFY_ERROR("A000110", "用户名校验失败"),
     USER_NAME_EXIST_ERROR("A000111", "用户名已存在"),
     USER_NOT_EXIST_ERROR("A000112", "用户不存在"),
+    USER_OR_PASSWORD_ERROR("A000113", "用户名或密码错误"),
 
     // ========== 二级宏观错误码 分组错误码 ==========
     GROUP_REACH_LIMIT_ERROR("A000300", "分组达到上限"),
