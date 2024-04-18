@@ -3,6 +3,7 @@ package com.prazk.myshortlink.project.biz.service.impl;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.common.convention.exception.ClientException;
@@ -97,11 +98,14 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
                 }
                 String gid = linkGoto.getGid();
                 // 根据短链接表的分片键【gid】，查询数据库，得到原始链接
-                LambdaQueryWrapper<Link> linkWrapper = new LambdaQueryWrapper<>();
-                linkWrapper.eq(Link::getGid, gid)
+                QueryWrapper<Link> linkWrapper = new QueryWrapper<>();
+                linkWrapper.select("origin_uri as originUrl", "valid_date as validDate", "valid_date_type as validDateType")
+                        .lambda()
+                        .eq(Link::getGid, gid)
                         .eq(Link::getShortUri, shortUri)
                         .eq(Link::getEnableStatus, CommonConstant.HAS_ENABLED)
                         .eq(Link::getDelFlag, CommonConstant.NOT_DELETED);
+
                 Link link = linkMapper.selectOne(linkWrapper);
                 if (link == null) {
                     log.info("数据库未命中");
