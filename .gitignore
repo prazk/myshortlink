@@ -45,3 +45,6 @@ build/
 /myshortlink-project/project-biz/src/main/resources/shardingsphere-config.yml
 /myshortlink-gateway/src/main/resources/application-dev.yml
 /myshortlink-admin/src/main/resources/application-dev-gateway.yml
+/myshortlink-admin/src/main/resources/application-prod.yml
+/myshortlink-gateway/src/main/resources/application-prod.yml
+/myshortlink-project/project-biz/src/main/resources/application-prod.yml
