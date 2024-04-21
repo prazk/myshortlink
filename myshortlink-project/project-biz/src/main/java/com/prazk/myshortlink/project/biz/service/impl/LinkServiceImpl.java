@@ -3,6 +3,7 @@ package com.prazk.myshortlink.project.biz.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -11,6 +12,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.common.convention.exception.ClientException;
+import com.prazk.myshortlink.common.convention.exception.ServerException;
 import com.prazk.myshortlink.project.biz.annotation.DomainWhiteList;
 import com.prazk.myshortlink.project.biz.common.config.DomainProperties;
 import com.prazk.myshortlink.project.biz.common.config.DomainWhiteListProperties;
@@ -69,9 +71,11 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         int retryCnt = LinkConstant.RETRY_TIMES;
         while (shortLinkGenerationBloomFilter.contains(base62 = HashUtil.linkToBase62(uriBuilder.toString()))) {
             if (retryCnt-- == 0) {
-                throw new ClientException(BaseErrorCode.SERVICE_BUSY_ERROR);
+                throw new ServerException(BaseErrorCode.SERVICE_BUSY_ERROR);
             }
-            uriBuilder.append(System.currentTimeMillis());
+            // 不使用当前毫秒数，随机性不如UUID，吞吐量和UUID差不多
+            // 不能使用常量，如果使用常量，对于输入相同的短链接，重复插入次数超过retryCnt之后的每次插入都会失败
+            uriBuilder.append(UUID.fastUUID());
         }
         // 将base62的6位短链接插入布隆过滤器
         // 布隆过滤器容量1亿，短链接数量62^6=568亿，murmurhash2^32=42亿

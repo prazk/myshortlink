@@ -25,6 +25,9 @@ import java.util.List;
 
 import static com.prazk.myshortlink.common.convention.constant.HttpHeadersConstant.USER_INFO_HEADER;
 
+/**
+ * 网关过滤器工厂类，实现了登录校验与限流功能
+ */
 @Component
 public class TokenValidateGatewayFilterFactory extends AbstractGatewayFilterFactory<TokenValidateGatewayFilterFactory.Config> {
 

@@ -25,7 +25,7 @@ import java.util.List;
 
 
 /**
- * 登录拦截校验
+ * 【未使用网关时启用】登录拦截校验
  */
 @Slf4j
 @Component

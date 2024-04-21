@@ -51,9 +51,10 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     public void saveGroup(String username, GroupCreateDTO groupCreateDTO) {
         String key = RedisCacheConstant.LOCK_GROUP_COUNT_PREFIX + username;
         RLock lock = redissonClient.getLock(key);
+        // 对“共享变量”【分组数量】存在读写操作，需要考虑并发安全问题
         if (lock.tryLock()) {
             try {
-                // 先查询数据库中当前用户的所有gid
+                // 先查询用户的分组数量
                 LambdaQueryWrapper<Group> wrapper = new LambdaQueryWrapper<>();
                 wrapper.eq(Group::getUsername, username)
                         .eq(Group::getDelFlag, CommonConstant.NOT_DELETED);
