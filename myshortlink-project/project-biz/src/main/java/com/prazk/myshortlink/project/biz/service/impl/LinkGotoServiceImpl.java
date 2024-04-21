@@ -81,9 +81,38 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         // 存在缓存击穿问题：一个热点key失效，同时大量请求访问这个key，导致大量请求访问到数据库
         // 分布式锁解决缓存击穿问题，锁对象是短链接
         RLock lock = redissonClient.getLock(RedisConstant.LOCK_GOTO_SHORT_LINK_KEY_PREFIX + shortUri);
-        if (lock.tryLock(200, TimeUnit.MILLISECONDS)) { // 设置重试时间：200ms
+        // 使用 lock 还是 tryLock
+        // 1. 如果使用tryLock，是否需要设置waitTime？
+        //    如果不使用双重判定锁，则不设置，因为只需要有一个线程进行缓存重建，其他线程没有必有再等待一个线程重建完毕后再次进行缓存重建
+        //    如果配合双重判断锁使用，可以设置，使用双重判断锁后其他线程走的是缓存
+        // 2. 这里使用tryLock，且不设置waitTime的缺点：没有获取锁的线程就直接返回错误，用户体验较差，高并发场景下只有一个用户可以正常跳转，
+        //    其他用户则需要再刷新一次，如果重建时间长，甚至需要刷新多次；而优点是：可以快速返回失败，不用阻塞线程
+        // 3. 如果使用lock存在的问题是：发生缓存击穿时，会有很多线程阻塞等待获取锁，并且获取锁后还是要访问数据库
+        //    可以使用lock配合双重判定锁，让其他线程走缓存
+        // 综上，有三种方案选择：
+        // 1. 使用tryLock，不设置waitTime：获取不到锁直接返回失败，用户体验不好，甚至可能需要刷新很多次
+        // 2. 使用tryLock，设置waitTime，并使用双重判断锁：可以控制获取锁的时间，超过这个时间就返回失败
+        // 3. 使用lock，并使用双重判断锁，实际上就是方案二的waitTime设为无穷大：理想情况下一定会返回结果，但是用户等久了还是体验不好
+        // 这里选择折中的方案二，当出现缓存重建时间长的情况时，既不会让用户频繁地刷新而得到的还是404 NOT FOUND，也不会出现浏览器长时间没有被响应的情况
+        if (lock.tryLock(1000, TimeUnit.MILLISECONDS)) {
             try {
-                // Thread.sleep(10000); // 模拟重建时间长的场景
+                // 判断缓存是否重建完成，如果已经重建，则无需再访问数据库
+                originUrl = stringRedisTemplate.opsForValue().get(key);
+                if (!StrUtil.isBlank(originUrl)) { // 不为null且不为空
+                    log.info("缓存命中");
+                    // 统计访问数据
+                    doStatistics(request, response, shortUri);
+                    // 重定向结果
+                    response.sendRedirect(originUrl);
+                    return;
+                }
+                if ("".equals(originUrl)) {
+                    log.info("查询到空数据");
+                    response.sendRedirect("/link/notfound");
+                    return;
+                }
+
+//                Thread.sleep(10000); // 模拟重建时间长的场景
                 // 获取锁成功，让这个线程去访问数据库重建缓存，阻塞其他线程
                 // 通过中间表的分片键【short_uri】，拿到短链接表的分片键【gid】
                 LambdaQueryWrapper<LinkGoto> linkGotoWrapper = new LambdaQueryWrapper<>();

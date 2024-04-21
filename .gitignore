@@ -50,3 +50,8 @@ build/
 /myshortlink-project/project-biz/src/main/resources/application-prod.yml
 /myshortlink-project/project-biz/src/main/resources/shardingsphere-dev-config.yml
 /myshortlink-admin/src/main/resources/shardingsphere-dev-config.yml
+/myshortlink-gateway/src/main/resources/application-test.yml
+/myshortlink-project/project-biz/src/main/resources/application-test.yml
+/myshortlink-admin/src/main/resources/shardingsphere-test-config.yml
+/myshortlink-admin/src/main/resources/application-test-gateway.yml
+/myshortlink-project/project-biz/src/main/resources/shardingsphere-test-config.yml

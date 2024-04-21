@@ -59,11 +59,12 @@ public class TokenValidateGatewayFilterFactory extends AbstractGatewayFilterFact
             ServerHttpResponse response = exchange.getResponse();
             String path = request.getPath().toString();
 
+            // 放行用户注册接口
             if ("/short-link/admin/user".equals(path) && "POST".equals(request.getMethod().name())) {
                 return chain.filter(exchange);
             }
 
-            // 白名单校验
+            // 白名单校验：放行白名单中的接口
             List<String> whitePathList = config.whitePathList;
             if (!CollUtil.isEmpty(whitePathList) && whitePathList.stream().anyMatch(path::startsWith)) {
                 return chain.filter(exchange);

@@ -7,7 +7,6 @@ import com.prazk.myshortlink.project.biz.common.constant.LinkConstant;
 
 import java.nio.charset.StandardCharsets;
 
-
 public class HashUtil {
     private static final char[] BASE62 = {
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -18,6 +17,8 @@ public class HashUtil {
             'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
             'y', 'z'
     };
+
+    private static final int BASE62_LENGTH = BASE62.length;
 
     /**
      * 将长链接转换为 Base62的 6位短链接
@@ -38,8 +39,8 @@ public class HashUtil {
         // 将整型转换为 length位 base62
         StringBuilder sb = new StringBuilder();
         do {
-            sb.insert(0, BASE62[(int)(number % BASE62.length)]);
-            number /= BASE62.length;
+            sb.insert(0, BASE62[(int)(number % BASE62_LENGTH)]);
+            number /= BASE62_LENGTH;
         } while (number > 0);
 
         // 补齐 length位短链接
