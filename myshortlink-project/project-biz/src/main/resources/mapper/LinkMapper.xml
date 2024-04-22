@@ -7,7 +7,7 @@
     <update id="recordAccessLogs">
         UPDATE t_link
         SET total_uv = CASE WHEN total_uv = 0 THEN 1 ELSE total_uv + #{uvIncrement} END,
-            total_uip = CASE WHEN total_uip = 0 THEN 1 ELSE total_uip + #{uvIncrement} END,
+            total_uip = CASE WHEN total_uip = 0 THEN 1 ELSE total_uip + #{ipIncrement} END,
             total_pv = total_pv + 1
         WHERE gid = #{gid} AND short_uri = #{shortUri}
     </update>
