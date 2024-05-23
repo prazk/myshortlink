@@ -59,7 +59,9 @@ public class SpringRabbitListener {
         if (lock.tryLock()) {
             try {
                 // 保证业务幂等性
-                LinkStatsIdempotence linkStatsIdempotence = linkStatsIdempotenceMapper.selectOne(Wrappers.lambdaQuery(LinkStatsIdempotence.class).eq(LinkStatsIdempotence::getMessageId, messageId));
+                LinkStatsIdempotence linkStatsIdempotence = linkStatsIdempotenceMapper
+                        .selectOne(Wrappers.lambdaQuery(LinkStatsIdempotence.class)
+                                .eq(LinkStatsIdempotence::getMessageId, messageId));
                 if (linkStatsIdempotence != null) {
                     log.info("重复消费");
                     return;
@@ -75,7 +77,6 @@ public class SpringRabbitListener {
 
                 // IP统计
                 String ipKey = RedisConstant.STATS_IP_KEY_PREFIX + shortUri;
-
                 Long ipIncrement = stringRedisTemplate.opsForHyperLogLog().add(ipKey, actualIP);
                 Integer ipCount = stringRedisTemplate.opsForHyperLogLog().size(ipKey).intValue();
 
@@ -163,7 +164,11 @@ public class SpringRabbitListener {
                 linkMapper.recordAccessLogs(gid, shortUri, uvIncrement, ipIncrement);
 
                 // 消费完毕，插入数据库
-                LinkStatsIdempotence idempotence = LinkStatsIdempotence.builder().messageId(messageId).messageContent(JSONUtil.toJsonStr(statsMessage)).build();
+                LinkStatsIdempotence idempotence = LinkStatsIdempotence
+                        .builder()
+                        .messageId(messageId)
+                        .messageContent(JSONUtil.toJsonStr(statsMessage))
+                        .build();
                 linkStatsIdempotenceMapper.insert(idempotence);
             } catch (Throwable e) {
                 log.error("短链接统计业务异常");

@@ -29,7 +29,8 @@ import static com.prazk.myshortlink.common.convention.constant.HttpHeadersConsta
  * 网关过滤器工厂类，实现了登录校验与限流功能
  */
 @Component
-public class TokenValidateGatewayFilterFactory extends AbstractGatewayFilterFactory<TokenValidateGatewayFilterFactory.Config> {
+public class TokenValidateGatewayFilterFactory
+        extends AbstractGatewayFilterFactory<TokenValidateGatewayFilterFactory.Config> {
 
     private final StringRedisTemplate stringRedisTemplate;
 
@@ -50,6 +51,11 @@ public class TokenValidateGatewayFilterFactory extends AbstractGatewayFilterFact
     public TokenValidateGatewayFilterFactory(StringRedisTemplate stringRedisTemplate) {
         super(Config.class);
         this.stringRedisTemplate = stringRedisTemplate;
+    }
+
+    @Data
+    public static class Config {
+        private List<String> whitePathList;
     }
 
     @Override
@@ -115,10 +121,5 @@ public class TokenValidateGatewayFilterFactory extends AbstractGatewayFilterFact
 
             return chain.filter(serverWebExchange);
         }, 0);
-    }
-
-    @Data
-    public static class Config {
-        private List<String> whitePathList;
     }
 }

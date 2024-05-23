@@ -22,7 +22,7 @@ import static com.prazk.myshortlink.common.convention.constant.HttpHeadersConsta
 @RequiredArgsConstructor
 public class UserInfoInterceptor implements HandlerInterceptor {
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String username = request.getHeader(USER_INFO_HEADER);
         if (StrUtil.isNotBlank(username)) {
             UserContext.setUser(User.builder().username(username).build());
@@ -32,7 +32,7 @@ public class UserInfoInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         // 释放资源
         UserContext.removeUser();
     }
