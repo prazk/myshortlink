@@ -58,6 +58,12 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     public void restore(LinkRestoreDTO linkRestoreDTO, HttpServletRequest request, HttpServletResponse response) {
         // 先查询布隆过滤器，再查询数据库
         String shortUri = linkRestoreDTO.getShortUri();
+        // 参数合法性检查
+        if (shortUri.length() != LinkConstant.LINK_LENGTH) {
+            log.info("短链接参数不合法");
+            response.sendRedirect("/link/notfound");
+            return;
+        }
         // RBloomFilter是线程安全的
         if (!shortLinkGenerationBloomFilter.contains(shortUri)) {
             log.info("布隆过滤器未命中");
