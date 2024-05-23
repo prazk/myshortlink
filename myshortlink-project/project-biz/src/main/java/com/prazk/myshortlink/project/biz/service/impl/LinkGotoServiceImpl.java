@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.prazk.myshortlink.common.convention.errorcode.BaseErrorCode;
 import com.prazk.myshortlink.common.convention.exception.ClientException;
 import com.prazk.myshortlink.project.biz.common.constant.CommonConstant;
+import com.prazk.myshortlink.project.biz.common.constant.LinkConstant;
 import com.prazk.myshortlink.project.biz.common.constant.RabbitMQConstant;
 import com.prazk.myshortlink.project.biz.common.constant.RedisConstant;
 import com.prazk.myshortlink.project.biz.common.enums.ValidDateTypeEnum;
@@ -29,6 +30,8 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@RefreshScope
 public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> implements LinkGotoService {
 
     private final RBloomFilter<String> shortLinkGenerationBloomFilter;
@@ -45,6 +49,9 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final RabbitTemplate rabbitTemplate;
+
+    @Value("${project.link.goto.tryLock.time}")
+    private long time;
 
     @SneakyThrows
     @Override
@@ -94,7 +101,7 @@ public class LinkGotoServiceImpl extends ServiceImpl<LinkGotoMapper, LinkGoto> i
         // 2. 使用tryLock，设置waitTime，并使用双重判断锁：可以控制获取锁的时间，超过这个时间就返回失败
         // 3. 使用lock，并使用双重判断锁，实际上就是方案二的waitTime设为无穷大：理想情况下一定会返回结果，但是用户等久了还是体验不好
         // 这里选择折中的方案二，当出现缓存重建时间长的情况时，既不会让用户频繁地刷新而得到的还是404 NOT FOUND，也不会出现浏览器长时间没有被响应的情况
-        if (lock.tryLock(1000, TimeUnit.MILLISECONDS)) {
+        if (lock.tryLock(time, TimeUnit.MILLISECONDS)) {
             try {
                 // 判断缓存是否重建完成，如果已经重建，则无需再访问数据库
                 originUrl = stringRedisTemplate.opsForValue().get(key);
