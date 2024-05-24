@@ -75,11 +75,6 @@ public class SpringRabbitListener {
                 String userAgent = statsMessage.getUserAgent();
                 String userIdentifier = statsMessage.getUserIdentifier();
 
-                // IP统计
-                String ipKey = RedisConstant.STATS_IP_KEY_PREFIX + shortUri;
-                Long ipIncrement = stringRedisTemplate.opsForHyperLogLog().add(ipKey, actualIP);
-                Integer ipCount = stringRedisTemplate.opsForHyperLogLog().size(ipKey).intValue();
-
                 // 地区统计
                 Map<String, Object> reqParams = new HashMap<>();
                 reqParams.put("key", amapRegionStatsKey);
@@ -133,14 +128,6 @@ public class SpringRabbitListener {
                     linkDeviceStatsMapper.recordDeviceAccessStats(linkDeviceStats);
                 }
 
-                // PV统计
-                LinkAccessStats accessStats = LinkAccessStats.builder()
-                        .shortUri(shortUri)
-                        .uv(uvCount)
-                        .uip(ipCount)
-                        .build();
-                linkAccessStatsMapper.recordBasicAccessStats(accessStats);
-
                 // 记录访问日志
                 LinkAccessLogs linkAccessLogs = LinkAccessLogs.builder()
                         .shortUri(shortUri)
@@ -153,6 +140,19 @@ public class SpringRabbitListener {
                         .city(city)
                         .build();
                 linkAccessLogsMapper.recordAccessLogs(linkAccessLogs);
+
+                // IP统计
+                String ipKey = RedisConstant.STATS_IP_KEY_PREFIX + shortUri;
+                Long ipIncrement = stringRedisTemplate.opsForHyperLogLog().add(ipKey, actualIP);
+                Integer ipCount = stringRedisTemplate.opsForHyperLogLog().size(ipKey).intValue();
+
+                // PV统计
+                LinkAccessStats accessStats = LinkAccessStats.builder()
+                        .shortUri(shortUri)
+                        .uv(uvCount)
+                        .uip(ipCount)
+                        .build();
+                linkAccessStatsMapper.recordBasicAccessStats(accessStats);
 
                 // 记录当日访问(PV UV IP)日志
                 LinkStatsToday linkStatsToday = LinkStatsToday.builder()
