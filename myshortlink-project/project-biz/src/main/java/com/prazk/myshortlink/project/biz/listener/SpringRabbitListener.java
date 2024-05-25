@@ -26,10 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 
 @Component
@@ -62,7 +59,7 @@ public class SpringRabbitListener {
 
     @Transactional
     @RabbitListener(queues = RabbitMQConstant.LINK_STATS_DIRECT_QUEUE)
-    public void doStatisticsAsyn(Message message) {
+    public void doStatisticsAsync(Message message) {
         StatsMessage statsMessage = (StatsMessage) messageConverter.fromMessage(message);
         String messageId = message.getMessageProperties().getMessageId();
 
@@ -87,55 +84,71 @@ public class SpringRabbitListener {
                 }
 
                 // 地区统计
-                Future<LocaleStats> localeStatsFuture = POOL_EXECUTOR.submit(() -> getLocaleStats(actualIP, shortUri));
+//                Future<LocaleStats> localeStatsFuture = POOL_EXECUTOR.submit(() -> getLocaleStats(actualIP, shortUri));
+                CompletableFuture<LocaleStats> localeStatsFuture = CompletableFuture.supplyAsync(() ->
+                        getLocaleStats(actualIP, shortUri), POOL_EXECUTOR);
 
                 // IP统计
-                Future<IpStats> ipStatsFuture = POOL_EXECUTOR.submit(() -> getIpStats(shortUri, actualIP));
+//                Future<IpStats> ipStatsFuture = POOL_EXECUTOR.submit(() -> getIpStats(shortUri, actualIP));
+                CompletableFuture<IpStats> ipStatsFuture = CompletableFuture.supplyAsync(() ->
+                        getIpStats(shortUri, actualIP), POOL_EXECUTOR);
 
                 // OS、浏览器、设备统计
-                Future<OsBrowserDeviceStats> osBrowserDeviceStatsFuture =
-                        POOL_EXECUTOR.submit(() -> getOsBrowserDeviceStats(userAgent, shortUri));
+//                Future<OsBrowserDeviceStats> osBrowserDeviceStatsFuture =
+//                        POOL_EXECUTOR.submit(() -> getOsBrowserDeviceStats(userAgent, shortUri));
+                CompletableFuture<OsBrowserDeviceStats> osBrowserDeviceStatsFuture = CompletableFuture.supplyAsync(() ->
+                        getOsBrowserDeviceStats(userAgent, shortUri), POOL_EXECUTOR);
 
                 // 记录访问日志
-                Future<?> recordOk1 = POOL_EXECUTOR.submit(() -> {
-                    try {
-                        OsBrowserDeviceStats osBrowserDeviceStats = osBrowserDeviceStatsFuture.get();
-                        LocaleStats locale = localeStatsFuture.get();
-                        recordAccessLogs(shortUri, userIdentifier, osBrowserDeviceStats, actualIP, locale);
-                    } catch (Throwable e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+//                Future<?> recordOk1 = POOL_EXECUTOR.submit(() -> {
+//                    try {
+//                        OsBrowserDeviceStats osBrowserDeviceStats = osBrowserDeviceStatsFuture.get();
+//                        LocaleStats locale = localeStatsFuture.get();
+//                        recordAccessLogs(shortUri, userIdentifier, osBrowserDeviceStats, actualIP, locale);
+//                    } catch (Throwable e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+                CompletableFuture<?> recordOk1 = osBrowserDeviceStatsFuture.thenAcceptBothAsync(localeStatsFuture,
+                        (osStats, locale) ->
+                                recordAccessLogs(shortUri, userIdentifier, osStats, actualIP, locale),
+                        POOL_EXECUTOR);
 
-                Future<?> recordOk2 = POOL_EXECUTOR.submit(() -> {
-                    try {
-                        IpStats ipStats = ipStatsFuture.get();
-                        Future<?> submit1 = POOL_EXECUTOR.submit(() -> {
-                            // 记录基本访问数据
-                            recordBasicAccessStats(shortUri, uvIncrement.intValue(), ipStats.ipIncrement.intValue());
-                        });
-                        Future<?> submit2 = POOL_EXECUTOR.submit(() -> {
-                            // 记录当日访问(PV UV IP)日志
-                            recordAccessToday(shortUri, uvIncrement, ipStats);
-                        });
-                        Future<?> submit3 = POOL_EXECUTOR.submit(() -> {
-                            // 记录总访问量
-                            recordAccessLogs(gid, shortUri, uvIncrement, ipStats);
-                        });
-                        submit1.get();
-                        submit2.get();
-                        submit3.get();
-                    } catch (Throwable e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+//                Future<?> recordOk2 = POOL_EXECUTOR.submit(() -> {
+//                    try {
+//                        IpStats ipStats = ipStatsFuture.get();
+//                        Future<?> submit1 = POOL_EXECUTOR.submit(() -> {
+//                            // 记录基本访问数据
+//                            recordBasicAccessStats(shortUri, uvIncrement.intValue(), ipStats.ipIncrement.intValue());
+//                        });
+//                        Future<?> submit2 = POOL_EXECUTOR.submit(() -> {
+//                            // 记录当日访问(PV UV IP)日志
+//                            recordAccessToday(shortUri, uvIncrement, ipStats);
+//                        });
+//                        Future<?> submit3 = POOL_EXECUTOR.submit(() -> {
+//                            // 记录总访问量
+//                            recordAccessLogs(gid, shortUri, uvIncrement, ipStats);
+//                        });
+//                        submit1.get();
+//                        submit2.get();
+//                        submit3.get();
+//                    } catch (Throwable e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                });
+                CompletableFuture<?> recordOk2 = ipStatsFuture.thenComposeAsync(ipStats -> CompletableFuture.allOf(
+                        CompletableFuture.runAsync(() -> recordBasicAccessStats(shortUri, uvIncrement.intValue(), ipStats.ipIncrement.intValue()), POOL_EXECUTOR),
+                        CompletableFuture.runAsync(() -> recordAccessToday(shortUri, uvIncrement, ipStats), POOL_EXECUTOR),
+                        CompletableFuture.runAsync(() -> recordAccessLogs(gid, shortUri, uvIncrement, ipStats), POOL_EXECUTOR)
+                ));
 
-                try {
-                    recordOk1.get();
-                    recordOk2.get();
-                } catch (Throwable e) {
-                    throw new RuntimeException(e);
-                }
+//                try {
+//                    recordOk1.get();
+//                    recordOk2.get();
+//                } catch (Throwable e) {
+//                    throw new RuntimeException(e);
+//                }
+                CompletableFuture.allOf(recordOk1, recordOk2).join();
 
                 // 消费完毕，插入数据库
                 InsertMessageLog(messageId, statsMessage);
@@ -239,8 +252,7 @@ public class SpringRabbitListener {
                     .build();
             linkDeviceStatsMapper.recordDeviceAccessStats(linkDeviceStats);
         }
-        OsBrowserDeviceStats osBrowserDeviceStats = new OsBrowserDeviceStats(osName, browserName, deviceType);
-        return osBrowserDeviceStats;
+        return new OsBrowserDeviceStats(osName, browserName, deviceType);
     }
 
     private record OsBrowserDeviceStats(String osName, String browserName, int deviceType) {
