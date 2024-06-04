@@ -89,6 +89,7 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
                 .build();
         BeanUtil.copyProperties(linkAddDTO, link);
         baseMapper.insert(link);
+
         // 插入路由表
         LinkGoto linkGoto = LinkGoto.builder().gid(link.getGid()).shortUri(link.getShortUri()).build();
         linkGotoService.save(linkGoto);
