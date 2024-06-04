@@ -70,7 +70,7 @@ public class TokenValidateGatewayFilterFactory
                 return chain.filter(exchange);
             }
 
-            // 白名单校验：放行白名单中的接口
+            // 白名单校验：放行白名单中的接口，包括用户登录接口，配置在application.yml文件中
             List<String> whitePathList = config.whitePathList;
             if (!CollUtil.isEmpty(whitePathList) && whitePathList.stream().anyMatch(path::startsWith)) {
                 return chain.filter(exchange);

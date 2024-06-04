@@ -58,16 +58,15 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
      * 按单日排序：todayPv，todayUv，todayUip
      * 默认按创建时间排序：creatTime
      */
-    private final Set<String> orderTags = new HashSet<>(Arrays.asList("totalPv", "totalUv", "totalUip", "todayPv", "todayUv", "todayUip"));
+    private static final Set<String> orderTags = new HashSet<>(Arrays.asList("totalPv", "totalUv", "totalUip", "todayPv", "todayUv", "todayUip"));
 
     @Override
     @Transactional
     @DomainWhiteList(config = DomainWhiteListProperties.class)
     public LinkAddVO addLink(LinkAddDTO linkAddDTO) {
-        String originUrl = linkAddDTO.getOriginUrl(); // https://www.baidu.com
-        StringBuilder uriBuilder = new StringBuilder(originUrl);
-
+        // 根据长链接尝试生成短链接
         String base62;
+        StringBuilder uriBuilder = new StringBuilder(linkAddDTO.getOriginUrl());
         int retryCnt = LinkConstant.RETRY_TIMES;
         while (shortLinkGenerationBloomFilter.contains(base62 = HashUtil.linkToBase62(uriBuilder.toString()))) {
             if (retryCnt-- == 0) {
@@ -77,11 +76,13 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
             // 不能使用常量，如果使用常量，对于输入相同的短链接，重复插入次数超过retryCnt之后的每次插入都会失败
             uriBuilder.append(UUID.fastUUID());
         }
+
         // 将base62的6位短链接插入布隆过滤器
         // 布隆过滤器容量1亿，短链接数量62^6=568亿，murmurhash2^32=42亿
         shortLinkGenerationBloomFilter.add(base62);
 
-        // 布隆过滤器不存在，则数据库一定不存在，插入数据库
+        // 先操作数据库，再操作缓存
+        // 布隆过滤器不存在，则数据库一定不存在，插入数据库 TODO 优化：改为异步执行
         String fullShortUrl = domainProperties.getDomain() + "/" + base62;
         Link link = Link.builder()
                 .shortUri(base62)
@@ -89,13 +90,12 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
                 .build();
         BeanUtil.copyProperties(linkAddDTO, link);
         baseMapper.insert(link);
-        // 插入路由表
+
+        // 插入路由表 TODO 优化：改为异步执行
         LinkGoto linkGoto = LinkGoto.builder().gid(link.getGid()).shortUri(link.getShortUri()).build();
         linkGotoService.save(linkGoto);
 
-        LinkAddVO linkAddVO = new LinkAddVO();
-        BeanUtil.copyProperties(link, linkAddVO);
-        // 缓存预热：先操作数据库，再操作缓存
+        // 缓存预热 TODO 优化：改为异步执行
         String shortUri = link.getShortUri();
         String key = RedisConstant.GOTO_SHORT_LINK_KEY_PREFIX + shortUri;
         Duration expire = LinkUtil.getLinkExpireDuraion(ValidDateTypeEnum.fromType(link.getValidDateType()), link.getValidDate());
@@ -103,6 +103,10 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
             throw new ClientException(BaseErrorCode.LINK_EXPIRED_ERROR);
         }
         stringRedisTemplate.opsForValue().set(key, link.getOriginUrl(), expire);
+
+        // 返回VO
+        LinkAddVO linkAddVO = new LinkAddVO();
+        BeanUtil.copyProperties(link, linkAddVO);
         return linkAddVO;
     }
 
@@ -113,9 +117,8 @@ public class LinkServiceImpl extends ServiceImpl<LinkMapper, Link> implements Li
         // 注意防止SQL注入
         String orderTag = orderTags.contains(linkPageDTO.getOrderTag()) ? linkPageDTO.getOrderTag() : "createTime";
 
-        Page<LinkPageVO> result = (Page<LinkPageVO>) linkMapper.pageLink(page, LocalDate.now(), linkPageDTO.getGid(), StrUtil.toUnderlineCase(orderTag));
-
-        return result;
+        return (Page<LinkPageVO>) linkMapper.
+                pageLink(page, LocalDate.now(), linkPageDTO.getGid(), StrUtil.toUnderlineCase(orderTag));
     }
 
     @Override
