@@ -83,8 +83,7 @@ public class TokenValidateGatewayFilterFactory
             String riskKey = RedisCacheConstant.USER_FLOW_RISK_PREFIX + username;
             List<String> riskKeys = ListUtil.of(riskKey);
             Long flag = stringRedisTemplate.execute(FLOW_RISK_SCRIPT, riskKeys, reqTimes, expireSeconds);
-            assert flag != null;
-            if (flag.equals(0L)) {
+            if (flag != null && flag.equals(0L)) {
                 // 503 服务器忙
                 response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
                 return response.writeWith(Mono.fromSupplier(() -> {
